@@ -1,4 +1,3 @@
-import React from 'react';
 import CatSprite from './CatSprite';
 import type { CatWithPosition } from '../hooks/useCatPlacement';
 import { spriteConfig } from '../config/spriteConfig';
@@ -23,11 +22,11 @@ interface CampCatProps {
  * @param onCatClick - Function called when cat is clicked
  * @param spriteSize - Pixel size for the cat sprite
  */
-const CampCat: React.FC<CampCatProps> = ({ 
+const CampCat = ({ 
   cat, 
   onCatClick, 
   spriteSize = spriteConfig.sizes.default 
-}) => {
+}: CampCatProps) => {
   const handleClick = () => {
     onCatClick(cat);
   };
