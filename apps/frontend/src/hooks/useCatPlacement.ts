@@ -67,9 +67,10 @@ export const useCatPlacement = (
     containerHeight = campConfig.dimensions.height
   } = options;
 
-  // Calculate sprite half-width/height as percentage to prevent edge clipping
-  const spritePadding = (spriteSize / 2) / containerWidth * 100;
-  const spritePaddingY = (spriteSize / 2) / containerHeight * 100;
+  // Calculate sprite boundaries as percentage to prevent edge clipping
+  // Use configurable padding to ensure full visibility
+  const spritePadding = (spriteSize * campConfig.spacing.boundaryPadding) / containerWidth * 100;
+  const spritePaddingY = (spriteSize * campConfig.spacing.boundaryPadding) / containerHeight * 100;
   
   // Adjust placement boundaries to keep sprites fully within container
   const adjustedMinX = Math.max(minX, spritePadding);

@@ -26,6 +26,14 @@ export const spriteConfig = {
     useDropShadow: true,
   },
 
+  /** Popover settings */
+  popover: {
+    /** Vertical offset from sprite center in pixels */
+    offsetY: 80,
+    /** Minimum horizontal margin from edges as percentage */
+    minEdgeMargin: 15,
+  },
+
   /** Sprite asset paths */
   paths: {
     /** Base directory for cat sprites */
@@ -56,8 +64,8 @@ export const spriteConfig = {
     padding: 'px-2 py-1',
     /** Border radius for tooltips */
     borderRadius: 'rounded',
-    /** Positioning offset from sprite */
-    offset: 'mb-2',
+    /** Positioning offset from sprite (mb-1, mb-2, mb-3, etc.) */
+    offset: 'mb-0',
   },
 } as const;
 

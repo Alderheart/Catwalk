@@ -36,6 +36,8 @@ export const campConfig = {
     minDistance: 12,
     /** Maximum attempts to find non-overlapping position */
     maxPlacementAttempts: 50,
+    /** Boundary padding as percentage of sprite size (0.5 = 50%, 0.6 = 60%) */
+    boundaryPadding: 0.7,
   },
 
   /** Visual effects and animations */

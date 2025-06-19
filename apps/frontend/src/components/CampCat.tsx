@@ -41,17 +41,19 @@ const CampCat: React.FC<CampCatProps> = ({
       style={{
         left: `${cat.x}%`,
         top: `${cat.y}%`,
-        // Apply transforms: position centering, rotation, mirroring, and scaling
-        transform: `translate(-50%, -50%) rotate(${cat.rotation || 0}deg) scale(${cat.mirrored ? -1 : 1}, ${cat.scale || 1})`
+        // Apply transforms: position centering, rotation, and scaling (but NOT mirroring)
+        transform: `translate(-50%, -50%) rotate(${cat.rotation || 0}deg) scale(${cat.scale || 1})`
       }}
     >
       <div className="group cursor-pointer" onClick={handleClick}>
-        {/* Cat sprite container with dynamic sizing */}
+        {/* Cat sprite container with dynamic sizing and mirroring */}
         <div 
           className={spriteConfig.rendering.useDropShadow ? "drop-shadow-lg" : ""}
           style={{
             width: `${containerSize}px`,
-            height: `${containerSize}px`
+            height: `${containerSize}px`,
+            // Apply mirroring only to the sprite container
+            transform: cat.mirrored ? 'scaleX(-1)' : 'none'
           }}
         >
           <CatSprite 
@@ -61,7 +63,7 @@ const CampCat: React.FC<CampCatProps> = ({
           />
         </div>
         
-        {/* Hover tooltip showing cat name */}
+        {/* Hover tooltip showing cat name (not affected by sprite mirroring) */}
         <div className={`absolute bottom-full left-1/2 transform -translate-x-1/2 ${spriteConfig.tooltip.offset} opacity-0 group-hover:opacity-100 ${spriteConfig.animations.opacityTransition}`}>
           <div className={`${spriteConfig.tooltip.background} ${spriteConfig.tooltip.textColor} ${spriteConfig.tooltip.textSize} ${spriteConfig.tooltip.padding} ${spriteConfig.tooltip.borderRadius} whitespace-nowrap`}>
             {cat.name}

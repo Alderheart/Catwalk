@@ -83,12 +83,13 @@ sizes: {
 Edit `/src/config/campConfig.ts`:
 ```typescript
 spacing: {
-  avoidOverlap: false,    // Allow overlapping
-  minDistance: 20,        // Increase spacing
+  avoidOverlap: false,     // Allow overlapping
+  minDistance: 20,         // Increase spacing
+  boundaryPadding: 0.7,    // More boundary padding (70% of sprite size)
   // ...
 },
 effects: {
-  mirrorChance: 0.3,      // Less mirroring
+  mirrorChance: 0.3,       // Less mirroring
   // ...
 }
 ```
@@ -100,6 +101,17 @@ styling: {
     from: 'from-blue-400',  // Different gradient
     to: 'to-blue-600',
   },
+  // ...
+}
+```
+
+### Adjusting Tooltip Positioning
+Edit `/src/config/spriteConfig.ts`:
+```typescript
+tooltip: {
+  offset: 'mb-3',         // More space above sprite
+  textSize: 'text-sm',    // Larger text
+  background: 'bg-blue-900/90', // Different background
   // ...
 }
 ```
