@@ -29,7 +29,7 @@ export const spriteConfig = {
   /** Popover settings */
   popover: {
     /** Vertical offset from sprite center in pixels */
-    offsetY: 80,
+    offsetY: 70,
     /** Minimum horizontal margin from edges as percentage */
     minEdgeMargin: 15,
   },

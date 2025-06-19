@@ -1,6 +1,48 @@
 @import "tailwindcss";
 
-body {
+* {
+  box-sizing: border-box;
+}
+
+html, body {
   margin: 0;
+  padding: 0;
+  width: 100%;
+  overflow-x: hidden;
   font-family: system-ui, -apple-system, sans-serif;
+}
+
+/* Safe area support for mobile devices (iPhone X and newer) */
+.safe-area-bottom {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* Prevent overscroll and pull-to-refresh on mobile */
+html {
+  overscroll-behavior: none;
+  overflow-x: hidden;
+}
+
+/* Ensure full height on mobile browsers */
+#root {
+  min-height: 100vh;
+  min-height: -webkit-fill-available;
+  width: 100%;
+  overflow-x: hidden;
+}
+
+html {
+  height: -webkit-fill-available;
+}
+
+body {
+  min-height: 100vh;
+  min-height: -webkit-fill-available;
+  position: relative;
+  width: 100%;
+}
+
+/* Prevent horizontal scroll on all viewports */
+.overflow-x-hidden {
+  overflow-x: hidden !important;
 }

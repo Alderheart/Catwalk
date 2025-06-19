@@ -73,3 +73,41 @@ Run `pnpm run shared:build` first.
 
 ### Changes to shared types not reflecting
 Rebuild shared: `pnpm run shared:build` or use `pnpm run shared:dev` for watch mode.
+
+## 📅 Recent Updates (June 19, 2025)
+
+### New Features
+1. **Bottom Tab Bar Navigation**
+   - Mobile-first navigation with 4 tabs
+   - Zustand state management integration
+   - Safe area support for modern devices
+   - See `/docs/ui/bottom-tab-bar.md` for details
+
+2. **Responsive Design Improvements**
+   - Fixed mobile overflow/scrollbar issues
+   - Responsive camp view with aspect ratios
+   - Dynamic sprite sizing based on viewport
+
+3. **Cat Popup Positioning Fixes**
+   - Improved center alignment
+   - Removed edge margin constraints
+   - Fixed transform duplication issues
+
+### New Dependencies
+```bash
+# Added to frontend
+npx pnpm add zustand --filter @clangen/frontend
+```
+
+### State Management
+The app now uses Zustand for global state:
+```typescript
+import { useTabBarStore } from './stores/tabBarStore'
+
+// Hide tab bar for minigames
+const { hideForMinigame, showAfterMinigame } = useTabBarStore()
+```
+
+### Documentation
+- `/docs/development/session-changes-2025-06-19.md` - Detailed session changes
+- `/docs/ui/bottom-tab-bar.md` - Tab bar implementation guide

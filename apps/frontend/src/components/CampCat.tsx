@@ -37,7 +37,7 @@ const CampCat: React.FC<CampCatProps> = ({
 
   return (
     <div
-      className={`absolute transform -translate-x-1/2 -translate-y-1/2 ${spriteConfig.animations.hoverTransition} ${spriteConfig.animations.hoverScale}`}
+      className={`absolute ${spriteConfig.animations.hoverTransition} ${spriteConfig.animations.hoverScale}`}
       style={{
         left: `${cat.x}%`,
         top: `${cat.y}%`,
@@ -48,7 +48,7 @@ const CampCat: React.FC<CampCatProps> = ({
       <div className="group cursor-pointer" onClick={handleClick}>
         {/* Cat sprite container with dynamic sizing and mirroring */}
         <div 
-          className={spriteConfig.rendering.useDropShadow ? "drop-shadow-lg" : ""}
+          className={`flex items-center justify-center ${spriteConfig.rendering.useDropShadow ? "drop-shadow-lg" : ""}`}
           style={{
             width: `${containerSize}px`,
             height: `${containerSize}px`,

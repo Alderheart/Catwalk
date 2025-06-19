@@ -40,26 +40,18 @@ const CatPopover: React.FC<CatPopoverProps> = ({ cat, position, onClose }) => {
 
   if (!cat || !position) return null;
 
-  // Calculate if popover would go off-screen and adjust
-  const adjustedPosition = {
-    x: Math.max(
-      spriteConfig.popover.minEdgeMargin, 
-      Math.min(100 - spriteConfig.popover.minEdgeMargin, position.x)
-    ),
-    y: position.y
-  };
-
   return (
     <div
       ref={popoverRef}
-      className="absolute z-50 animate-in"
+      className="absolute z-50 animate-in pointer-events-none"
       style={{
-        left: `${adjustedPosition.x}%`,
-        top: `${adjustedPosition.y}%`,
-        transform: `translate(-50%, calc(-100% - ${spriteConfig.popover.offsetY}px))`
+        left: `${position.x}%`,
+        top: `${position.y}%`,
+        transform: `translate(-50%, calc(-100% - ${spriteConfig.popover.offsetY}px))`,
+        transformOrigin: 'center bottom'
       }}
     >
-      <div className="bg-white rounded-lg shadow-xl border border-gray-200 p-4 min-w-[200px]">
+      <div className="bg-white rounded-lg shadow-xl border border-gray-200 p-4 min-w-[200px] pointer-events-auto">
         {/* Arrow pointing down */}
         <div className="absolute top-full left-1/2 transform -translate-x-1/2 -mt-px">
           <div className="w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-t-[6px] border-t-white"></div>
