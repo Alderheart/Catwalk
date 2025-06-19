@@ -15,19 +15,19 @@ function App() {
         return <Camp />
       case 'cats':
         return (
-          <div className="min-h-screen w-full overflow-x-hidden bg-gradient-to-b from-blue-900 to-blue-950 p-4 flex items-center justify-center">
+          <div className="h-full w-full overflow-hidden bg-gradient-to-b from-blue-900 to-blue-950 p-4 flex items-center justify-center">
             <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white text-center">Cats (Coming Soon)</h1>
           </div>
         )
       case 'expeditions':
         return (
-          <div className="min-h-screen w-full overflow-x-hidden bg-gradient-to-b from-purple-900 to-purple-950 p-4 flex items-center justify-center">
+          <div className="h-full w-full overflow-hidden bg-gradient-to-b from-purple-900 to-purple-950 p-4 flex items-center justify-center">
             <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white text-center">Expeditions (Coming Soon)</h1>
           </div>
         )
       case 'menu':
         return (
-          <div className="min-h-screen w-full overflow-x-hidden bg-gradient-to-b from-gray-900 to-gray-950 p-4 flex items-center justify-center">
+          <div className="h-full w-full overflow-hidden bg-gradient-to-b from-gray-900 to-gray-950 p-4 flex items-center justify-center">
             <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white text-center">Menu (Coming Soon)</h1>
           </div>
         )
@@ -37,9 +37,9 @@ function App() {
   }
 
   return (
-    <div className="relative min-h-screen w-full overflow-x-hidden">
+    <div className="relative h-full w-full overflow-hidden">
       {/* Main content with padding for tab bar */}
-      <div className={`w-full overflow-x-hidden ${showTabBar ? 'pb-16' : ''}`}>
+      <div className={`w-full h-full overflow-hidden ${showTabBar ? 'pb-16' : ''}`}>
         {renderContent()}
       </div>
       

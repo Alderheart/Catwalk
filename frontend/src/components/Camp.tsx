@@ -53,11 +53,10 @@ const Camp: React.FC = () => {
   };
 
   return (
-    <div className={`min-h-screen w-full overflow-x-hidden bg-gradient-to-b ${campConfig.styling.background.from} ${campConfig.styling.background.to} p-4 sm:p-6 md:p-8`}>
-      <div className="w-full max-w-6xl mx-auto">
-        <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white mb-4 sm:mb-6 md:mb-8">Camp</h1>
+    <div className={`h-full w-full overflow-hidden bg-gradient-to-b ${campConfig.styling.background.from} ${campConfig.styling.background.to} safe-area-all flex flex-col`}>
+      <div className="w-full max-w-6xl mx-auto flex-1 flex flex-col p-4 sm:p-6 md:p-8">
         {/* Responsive camp area container */}
-        <div className="relative w-full aspect-[5/3] sm:aspect-[16/10] md:aspect-[16/9] max-h-[70vh]">
+        <div className="relative w-full flex-1 max-h-full">
           <div className={`absolute inset-0 ${campConfig.styling.campArea.background} ${campConfig.styling.campArea.backdropBlur} ${campConfig.styling.campArea.borderRadius} overflow-hidden`}>
             {/* Ground texture */}
             <div className="absolute inset-0 bg-gradient-to-b from-transparent to-green-800/20 rounded-lg" />

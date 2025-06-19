@@ -1,172 +1,69 @@
 # Configuration System
 
-The Clangen project uses centralized configuration files to manage settings for camp layout, sprite rendering, and game mechanics. This makes it easy to adjust values without hunting through code files.
+Centralized configuration for camp layout, sprites, and game mechanics.
 
 ## Configuration Files
 
-### Camp Configuration (`/src/config/campConfig.ts`)
-
-Controls camp layout, cat placement, and visual styling:
+### Camp Configuration (`frontend/src/config/campConfig.ts`)
+Controls camp layout and cat placement:
 
 ```typescript
-import { campConfig } from '../config/campConfig';
-
-// Access placement settings
-campConfig.placement.default.minX  // Default boundaries
+campConfig.placement.default.minX  // Boundaries
 campConfig.spacing.avoidOverlap    // Overlap prevention
-campConfig.effects.mirrorChance    // Random mirroring
-
-// Access visual styling
-campConfig.styling.background.from // Gradient colors
-campConfig.dimensions.height       // Camp area size
+campConfig.effects.mirrorChance    // Visual effects
+campConfig.styling.background      // CSS styling
 ```
 
-**Key Sections:**
-- `dimensions`: Camp container width/height
-- `placement`: Boundary settings for cat positioning
-- `spacing`: Overlap prevention and distance settings
-- `effects`: Visual properties (mirroring, scaling, rotation)
-- `styling`: CSS classes for backgrounds and styling
+**Sections:**
+- `dimensions` - Camp container size
+- `placement` - Cat positioning boundaries
+- `spacing` - Overlap and distance settings
+- `effects` - Visual properties
+- `styling` - CSS classes
 
-### Sprite Configuration (`/src/config/spriteConfig.ts`)
-
-Manages sprite rendering, sizing, and asset paths:
+### Sprite Configuration (`frontend/src/config/spriteConfig.ts`)
+Manages sprite rendering and sizing:
 
 ```typescript
-import { spriteConfig, getSpriteUrl } from '../config/spriteConfig';
-
-// Access sprite sizes
 spriteConfig.sizes.default  // 128px
-spriteConfig.sizes.small    // 64px
-spriteConfig.sizes.large    // 160px
-
-// Helper functions
-getSpriteUrl('cat-sprite')  // Returns full path
-getSizeClass(128)          // Returns Tailwind classes
+getSpriteUrl('cat-sprite')  // Full asset path
+getSizeClass(128)          // Tailwind classes
 ```
 
-**Key Sections:**
-- `sizes`: Predefined sprite dimensions
-- `rendering`: Image rendering and CSS settings
-- `paths`: Asset directory structure
-- `animations`: Transition and hover effects
-- `tooltip`: Name tooltip styling
-
-## Helper Functions
-
-### `getSpriteUrl(filename)`
-Generates full asset paths:
-```typescript
-getSpriteUrl('moonwhisker') // → '/assets/sprites/cats/moonwhisker.png'
-```
-
-### `getSizeClass(size)`
-Converts pixel sizes to Tailwind classes:
-```typescript
-getSizeClass(128) // → 'w-32 h-32'
-getSizeClass(96)  // → 'w-24 h-24'
-```
+**Sections:**
+- `sizes` - Sprite dimensions
+- `rendering` - Image settings
+- `paths` - Asset directories
+- `animations` - Transitions
+- `tooltip` - Hover tooltips
 
 ## Usage Examples
 
-### Changing Sprite Sizes
-Edit `/src/config/spriteConfig.ts`:
+### Change Sprite Sizes
 ```typescript
+// In spriteConfig.ts
 sizes: {
-  default: 160,  // Make cats larger
-  small: 80,     // Increase small size
-  // ...
+  default: 160,  // Larger cats
+  small: 80,
 }
 ```
 
-### Adjusting Cat Placement
-Edit `/src/config/campConfig.ts`:
+### Adjust Cat Placement
 ```typescript
+// In campConfig.ts
 spacing: {
-  avoidOverlap: false,     // Allow overlapping
-  minDistance: 20,         // Increase spacing
-  boundaryPadding: 0.7,    // More boundary padding (70% of sprite size)
-  // ...
-},
-effects: {
-  mirrorChance: 0.3,       // Less mirroring
-  // ...
+  avoidOverlap: false,
+  minDistance: 20,
 }
 ```
 
-### Customizing Visual Style
+### Customize Styling
 ```typescript
+// In campConfig.ts
 styling: {
   background: {
-    from: 'from-blue-400',  // Different gradient
+    from: 'from-blue-400',
     to: 'to-blue-600',
-  },
-  // ...
-}
-```
-
-### Adjusting Tooltip Positioning
-Edit `/src/config/spriteConfig.ts`:
-```typescript
-tooltip: {
-  offset: 'mb-3',         // More space above sprite
-  textSize: 'text-sm',    // Larger text
-  background: 'bg-blue-900/90', // Different background
-  // ...
-}
-```
-
-## Benefits
-
-### ✅ Easy Tweaking
-- Adjust game balance without searching code
-- Modify visual styling in one place
-- Test different configurations quickly
-
-### ✅ Type Safety
-- Configuration objects are strongly typed
-- IDE autocomplete for all settings
-- Compile-time validation of values
-
-### ✅ Documentation
-- Self-documenting with JSDoc comments
-- Clear organization by functionality
-- Helper functions for common operations
-
-### ✅ Maintainability
-- Centralized configuration reduces duplication
-- Easy to see all related settings together
-- Changes propagate automatically to components
-
-## Adding New Configuration
-
-### 1. Create New Config File
-```typescript
-// /src/config/newConfig.ts
-export const newConfig = {
-  feature: {
-    setting: 'value',
-    // ...
   }
-} as const;
+}
 ```
-
-### 2. Import in Components
-```typescript
-import { newConfig } from '../config/newConfig';
-
-// Use in component
-const value = newConfig.feature.setting;
-```
-
-### 3. Update Documentation
-Add the new config to this guide and relevant component documentation.
-
-## Best Practices
-
-- **Use `as const`** for configuration objects to ensure literal types
-- **Group related settings** in logical sections
-- **Provide JSDoc comments** for complex settings
-- **Create helper functions** for common operations
-- **Use TypeScript** for type safety and autocomplete
-- **Document defaults** in JSDoc comments
