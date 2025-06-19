@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import type { Cat } from '../types/Cat';
+import { campConfig } from '../config/campConfig';
 
 /**
  * Extended cat interface that includes positioning and visual properties
@@ -55,15 +56,15 @@ export const useCatPlacement = (
   options: CatPlacementOptions = {}
 ) => {
   const {
-    minX = 10,
-    maxX = 90,
-    minY = 10,
-    maxY = 90,
-    avoidOverlap = false,
-    minDistance = 15,
+    minX = campConfig.placement.default.minX,
+    maxX = campConfig.placement.default.maxX,
+    minY = campConfig.placement.default.minY,
+    maxY = campConfig.placement.default.maxY,
+    avoidOverlap = campConfig.spacing.avoidOverlap,
+    minDistance = campConfig.spacing.minDistance,
     spriteSize = 128,
-    containerWidth = 1000,
-    containerHeight = 600
+    containerWidth = campConfig.dimensions.width,
+    containerHeight = campConfig.dimensions.height
   } = options;
 
   // Calculate sprite half-width/height as percentage to prevent edge clipping
@@ -83,7 +84,6 @@ export const useCatPlacement = (
     for (const cat of cats) {
       let x: number, y: number;
       let attempts = 0;
-      const maxAttempts = 50;
 
       // Generate random position, retrying if overlap prevention is enabled
       do {
@@ -92,7 +92,7 @@ export const useCatPlacement = (
         attempts++;
       } while (
         avoidOverlap && 
-        attempts < maxAttempts && 
+        attempts < campConfig.spacing.maxPlacementAttempts && 
         placedCats.some(placedCat => {
           // Calculate Euclidean distance between cats
           const distance = Math.sqrt(
@@ -107,9 +107,9 @@ export const useCatPlacement = (
         ...cat,
         x,
         y,
-        scale: 1,
-        rotation: 0,
-        mirrored: Math.random() < 0.5 // Random horizontal flip for visual variety
+        scale: campConfig.effects.defaultScale,
+        rotation: campConfig.effects.defaultRotation,
+        mirrored: Math.random() < campConfig.effects.mirrorChance
       });
     }
 

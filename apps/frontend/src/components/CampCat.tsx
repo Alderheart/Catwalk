@@ -1,6 +1,7 @@
 import React from 'react';
 import CatSprite from './CatSprite';
 import type { CatWithPosition } from '../hooks/useCatPlacement';
+import { spriteConfig } from '../config/spriteConfig';
 
 /**
  * Props for the CampCat component
@@ -25,7 +26,7 @@ interface CampCatProps {
 const CampCat: React.FC<CampCatProps> = ({ 
   cat, 
   onCatClick, 
-  spriteSize = 128 
+  spriteSize = spriteConfig.sizes.default 
 }) => {
   const handleClick = () => {
     onCatClick(cat);
@@ -36,7 +37,7 @@ const CampCat: React.FC<CampCatProps> = ({
 
   return (
     <div
-      className="absolute transform -translate-x-1/2 -translate-y-1/2 transition-all hover:scale-110"
+      className={`absolute transform -translate-x-1/2 -translate-y-1/2 ${spriteConfig.animations.hoverTransition} ${spriteConfig.animations.hoverScale}`}
       style={{
         left: `${cat.x}%`,
         top: `${cat.y}%`,
@@ -47,7 +48,7 @@ const CampCat: React.FC<CampCatProps> = ({
       <div className="group cursor-pointer" onClick={handleClick}>
         {/* Cat sprite container with dynamic sizing */}
         <div 
-          className="drop-shadow-lg"
+          className={spriteConfig.rendering.useDropShadow ? "drop-shadow-lg" : ""}
           style={{
             width: `${containerSize}px`,
             height: `${containerSize}px`
@@ -61,8 +62,8 @@ const CampCat: React.FC<CampCatProps> = ({
         </div>
         
         {/* Hover tooltip showing cat name */}
-        <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 opacity-0 group-hover:opacity-100 transition-opacity">
-          <div className="bg-black/80 text-white text-xs px-2 py-1 rounded whitespace-nowrap">
+        <div className={`absolute bottom-full left-1/2 transform -translate-x-1/2 ${spriteConfig.tooltip.offset} opacity-0 group-hover:opacity-100 ${spriteConfig.animations.opacityTransition}`}>
+          <div className={`${spriteConfig.tooltip.background} ${spriteConfig.tooltip.textColor} ${spriteConfig.tooltip.textSize} ${spriteConfig.tooltip.padding} ${spriteConfig.tooltip.borderRadius} whitespace-nowrap`}>
             {cat.name}
           </div>
         </div>

@@ -1,54 +1,105 @@
-# React + TypeScript + Vite
+# Clangen - Cat Colony Management Game
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A browser-based game where players manage a colony of wild cats, combining collection mechanics with progression systems.
 
-Currently, two official plugins are available:
+## 🏗️ Monorepo Structure
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default tseslint.config({
-  extends: [
-    // Remove ...tseslint.configs.recommended and replace with this
-    ...tseslint.configs.recommendedTypeChecked,
-    // Alternatively, use this for stricter rules
-    ...tseslint.configs.strictTypeChecked,
-    // Optionally, add this for stylistic rules
-    ...tseslint.configs.stylisticTypeChecked,
-  ],
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
+```
+clangen/
+├── apps/
+│   ├── frontend/          # React frontend application
+│   └── backend/           # Backend API (coming soon)
+├── packages/
+│   ├── shared/           # Shared types and utilities
+│   └── game-logic/       # Shared game mechanics (coming soon)
+└── docs/                 # Game design documentation
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## 🚀 Getting Started
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+### Prerequisites
+- Node.js 18+
+- pnpm 8+
 
-export default tseslint.config({
-  plugins: {
-    // Add the react-x and react-dom plugins
-    'react-x': reactX,
-    'react-dom': reactDom,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended typescript rules
-    ...reactX.configs['recommended-typescript'].rules,
-    ...reactDom.configs.recommended.rules,
-  },
-})
+### Installation
+
+```bash
+# Install pnpm if you haven't already
+npm install -g pnpm
+
+# Install all dependencies
+pnpm install
+
+# Build shared packages
+pnpm run shared:build
 ```
+
+### Development
+
+```bash
+# Run all apps in development mode
+pnpm run dev
+
+# Run only frontend
+pnpm run frontend:dev
+
+# Run only backend (when available)
+pnpm run backend:dev
+```
+
+### Building
+
+```bash
+# Build all packages
+pnpm run build
+
+# Build specific apps
+pnpm run frontend:build
+pnpm run backend:build
+```
+
+## 📦 Packages
+
+### `@clangen/frontend`
+The main React application featuring:
+- Cat colony management interface
+- Sprite-based cat rendering
+- Random placement system
+- Interactive camp environment
+
+### `@clangen/shared`
+Shared TypeScript types and utilities used across all packages.
+
+### `@clangen/backend` (Coming Soon)
+API server for:
+- Multiplayer features
+- Trading system
+- Market functionality
+- Anti-cheat measures
+
+## 🎮 Game Features
+
+- **Cat Collection**: Collect and manage unique cats with different traits
+- **Camp Management**: Organize your cats in a customizable camp environment
+- **Expeditions**: Send cats on tarot-based expeditions (coming soon)
+- **Trading**: Trade cats with other players (coming soon)
+- **Marketplace**: Buy and sell cats in a player-driven economy (coming soon)
+
+## 📚 Documentation
+
+See the `/docs` directory for detailed game design documentation:
+- `/docs/game-design/` - Core game concepts
+- `/docs/mechanics/` - Game mechanics details
+- `/docs/systems/` - Technical implementation guides
+- `/docs/development/` - Development guides and configuration
+
+## 🛠️ Tech Stack
+
+- **Frontend**: React, TypeScript, Vite, Tailwind CSS
+- **Backend**: Node.js, TypeScript (coming soon)
+- **Monorepo**: pnpm workspaces
+- **Build Tools**: Vite, tsup
+
+## 📄 License
+
+This project is private and proprietary.

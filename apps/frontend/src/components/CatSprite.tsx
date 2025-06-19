@@ -1,4 +1,5 @@
 import React from 'react';
+import { spriteConfig } from '../config/spriteConfig';
 
 /**
  * Props for the CatSprite component
@@ -22,7 +23,7 @@ interface CatSpriteProps {
  */
 const CatSpriteComponent: React.FC<CatSpriteProps> = ({ 
   spriteUrl, 
-  size = 64, 
+  size = spriteConfig.sizes.default, 
   alt = "Cat sprite" 
 }) => {
   return (
@@ -33,9 +34,9 @@ const CatSpriteComponent: React.FC<CatSpriteProps> = ({
       height={size}
       style={{ 
         // Ensure pixel art renders with crisp edges instead of blurring
-        imageRendering: 'pixelated'
+        imageRendering: spriteConfig.rendering.imageRendering
       }}
-      className="object-contain"
+      className={spriteConfig.rendering.objectFit}
     />
   );
 };

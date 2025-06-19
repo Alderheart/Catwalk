@@ -5,7 +5,15 @@
       "Bash(npm run dev:*)",
       "Bash(npm run lint)",
       "Bash(rm:*)",
-      "Bash(mkdir:*)"
+      "Bash(mkdir:*)",
+      "Bash(mv:*)",
+      "Bash(cp:*)",
+      "Bash(ls:*)",
+      "Bash(npx pnpm install:*)",
+      "Bash(npx pnpm run:*)",
+      "Bash(npx tsc:*)",
+      "Bash(npx pnpm --filter @clangen/frontend lint)",
+      "Bash(find:*)"
     ],
     "deny": []
   }

@@ -4,22 +4,16 @@ import type { Cat } from '../types/Cat';
 import CatModal from './CatModal';
 import CampCat from './CampCat';
 import { useCatPlacement } from '../hooks/useCatPlacement';
+import { campConfig } from '../config/campConfig';
+import { spriteConfig } from '../config/spriteConfig';
 
 
 const Camp: React.FC = () => {
   const [selectedCat, setSelectedCat] = useState<Cat | null>(null);
   
-  // Use the placement hook with options
+  // Use the placement hook with config values
   const catsWithPositions = useCatPlacement(mockCats, {
-    minX: 5,
-    maxX: 95,
-    minY: 5,
-    maxY: 95,
-    avoidOverlap: true,
-    minDistance: 12,
-    spriteSize: 128,
-    containerWidth: 1000, // Approximate max-w-6xl width
-    containerHeight: 600  // h-[600px] from camp area
+    spriteSize: spriteConfig.sizes.default,
   });
 
   const handleCatClick = (cat: Cat) => {
@@ -27,10 +21,11 @@ const Camp: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-green-400 to-green-600 p-8">
+    <div className={`min-h-screen bg-gradient-to-b ${campConfig.styling.background.from} ${campConfig.styling.background.to} p-8`}>
       <div className="max-w-6xl mx-auto">
         <h1 className="text-4xl font-bold text-white mb-8">Camp</h1>
-        <div className="relative bg-green-700/30 backdrop-blur-sm rounded-lg h-[600px] overflow-hidden">
+        <div className={`relative ${campConfig.styling.campArea.background} ${campConfig.styling.campArea.backdropBlur} ${campConfig.styling.campArea.borderRadius} overflow-hidden`}
+             style={{ height: `${campConfig.dimensions.height}px` }}>
           {/* Ground texture */}
           <div className="absolute inset-0 bg-gradient-to-b from-transparent to-green-800/20" />
           
@@ -40,7 +35,7 @@ const Camp: React.FC = () => {
               key={cat.id}
               cat={cat}
               onCatClick={handleCatClick}
-              spriteSize={128}
+              spriteSize={spriteConfig.sizes.default}
             />
           ))}
         </div>
