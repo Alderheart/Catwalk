@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import type { Cat } from '@clangen/shared';
+import type { Cat } from '../types/Cat';
 import { spriteConfig } from '../config/spriteConfig';
 
 interface CatPopoverProps {

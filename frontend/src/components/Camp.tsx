@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { mockCats } from '../data/mockCats';
 import type { Cat } from '../types/Cat';
-import CatPopover from './CatPopover';
+import CatModal from './CatModal';
 import CampCat from './CampCat';
 import { useCatPlacement } from '../hooks/useCatPlacement';
 import type { CatWithPosition } from '../hooks/useCatPlacement';
@@ -11,8 +11,7 @@ import { spriteConfig } from '../config/spriteConfig';
 
 const Camp: React.FC = () => {
   const [selectedCat, setSelectedCat] = useState<Cat | null>(null);
-  const [popoverPosition, setPopoverPosition] = useState<{ x: number; y: number } | null>(null);
-  const [spriteSize, setSpriteSize] = useState(spriteConfig.sizes.small);
+  const [spriteSize, setSpriteSize] = useState<number>(spriteConfig.sizes.small);
   
   // Responsive sprite sizing
   useEffect(() => {
@@ -37,19 +36,16 @@ const Camp: React.FC = () => {
   });
 
   const handleCatClick = (cat: CatWithPosition) => {
-    // If clicking the same cat, close the popover
+    // If clicking the same cat, close the modal
     if (selectedCat?.id === cat.id) {
-      handleClosePopover();
+      handleCloseModal();
     } else {
       setSelectedCat(cat);
-      // Position popover at cat's location
-      setPopoverPosition({ x: cat.x, y: cat.y });
     }
   };
 
-  const handleClosePopover = () => {
+  const handleCloseModal = () => {
     setSelectedCat(null);
-    setPopoverPosition(null);
   };
 
   return (
@@ -71,11 +67,10 @@ const Camp: React.FC = () => {
               />
             ))}
             
-            {/* Cat popover positioned relative to camp area */}
-            <CatPopover 
+            {/* Cat modal */}
+            <CatModal 
               cat={selectedCat} 
-              position={popoverPosition}
-              onClose={handleClosePopover} 
+              onClose={handleCloseModal} 
             />
           </div>
         </div>

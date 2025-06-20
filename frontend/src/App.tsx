@@ -1,5 +1,6 @@
 import Camp from './components/Camp'
 import BottomTabBar from './components/BottomTabBar'
+import TopHeader from './components/TopHeader'
 import { useTabBarStore } from './stores/tabBarStore'
 
 function App() {
@@ -37,9 +38,12 @@ function App() {
   }
 
   return (
-    <div className="relative h-full w-full overflow-hidden">
-      {/* Main content with padding for tab bar */}
-      <div className={`w-full h-full overflow-hidden ${showTabBar ? 'pb-16' : ''}`}>
+    <div className="relative h-full w-full overflow-hidden flex flex-col">
+      {/* Top Header */}
+      <TopHeader />
+      
+      {/* Main content */}
+      <div className={`flex-1 w-full overflow-hidden ${showTabBar ? 'pb-16' : ''}`}>
         {renderContent()}
       </div>
       

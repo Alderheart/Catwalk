@@ -31,6 +31,19 @@ html, body {
   padding-right: env(safe-area-inset-right);
 }
 
+/* Conditional safe area - only applies when notch exists */
+.safe-area-top-conditional {
+  padding-top: max(env(safe-area-inset-top), 0px);
+}
+
+/* Media query for devices with notches */
+@supports (padding: max(0px)) {
+  .has-notch {
+    /* Only add padding if safe-area-inset-top > 0 */
+    padding-top: max(env(safe-area-inset-top), 0px);
+  }
+}
+
 /* Prevent overscroll and pull-to-refresh on mobile */
 html {
   overscroll-behavior: none;
