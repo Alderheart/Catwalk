@@ -6,7 +6,19 @@
       "Bash(npm install:*)",
       "Bash(npx prisma:*)",
       "Bash(mkdir:*)",
-      "Bash(docker:*)"
+      "Bash(docker:*)",
+      "Bash(npx ts-node:*)",
+      "Bash(cat:*)",
+      "Bash(npm run dev:*)",
+      "Bash(npx tsc:*)",
+      "Bash(pkill:*)",
+      "Bash(curl:*)",
+      "Bash(chmod:*)",
+      "Bash(./scripts/test-api.sh:*)",
+      "Bash(rm:*)",
+      "Bash(npm run build:*)",
+      "Bash(ls:*)",
+      "Bash(./scripts/test-auth-simple.sh:*)"
     ],
     "deny": []
   }

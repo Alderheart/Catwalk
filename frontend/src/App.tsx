@@ -1,11 +1,21 @@
+import { useEffect } from 'react'
 import Camp from './components/Camp'
 import BottomTabBar from './components/BottomTabBar'
 import TopHeader from './components/TopHeader'
 import CatsList from './components/CatsList'
+import AuthPage from './components/AuthPage'
+import MenuPage from './components/MenuPage'
 import { useTabBarStore } from './stores/tabBarStore'
+import { useAuthStore } from './stores/authStore'
 
 function App() {
   const { activeTab, showTabBar, setActiveTab } = useTabBarStore()
+  const { isAuthenticated, checkAuthStatus } = useAuthStore()
+
+  // Check auth status on app load
+  useEffect(() => {
+    checkAuthStatus()
+  }, [])
 
   const handleTabChange = (tabId: string) => {
     setActiveTab(tabId)
@@ -24,14 +34,15 @@ function App() {
           </div>
         )
       case 'menu':
-        return (
-          <div className="h-full w-full overflow-hidden bg-gradient-to-b from-gray-900 to-gray-950 p-4 flex items-center justify-center">
-            <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white text-center">Menu (Coming Soon)</h1>
-          </div>
-        )
+        return <MenuPage />
       default:
         return <Camp />
     }
+  }
+
+  // Show auth page if not authenticated
+  if (!isAuthenticated) {
+    return <AuthPage />
   }
 
   return (

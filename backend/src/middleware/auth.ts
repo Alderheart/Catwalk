@@ -1,5 +1,6 @@
 import { Response, NextFunction } from 'express';
 import { AuthenticatedRequest } from '../types';
+import { supabase } from '../lib/supabase';
 
 export const authMiddleware = async (
   req: AuthenticatedRequest,
@@ -22,9 +23,9 @@ export const authMiddleware = async (
 
     const token = authHeader.substring(7);
     
-    // TODO: Implement actual token verification
-    // For now, we'll use a simple mock validation
-    if (token === 'invalid') {
+    const { data: { user }, error } = await supabase.auth.getUser(token);
+    
+    if (error || !user) {
       res.status(401).json({
         success: false,
         error: {
@@ -35,9 +36,9 @@ export const authMiddleware = async (
       return;
     }
 
-    // Mock user data - replace with actual token decoding
-    req.userId = 'user-123';
-    req.sessionId = 'session-456';
+    req.userId = user.id;
+    req.user = user;
+    req.sessionId = `session-${user.id}-${Date.now()}`;
     
     next();
   } catch (error) {
@@ -53,7 +54,7 @@ export const authMiddleware = async (
 
 export const optionalAuth = async (
   req: AuthenticatedRequest,
-  res: Response,
+  _res: Response,
   next: NextFunction
 ): Promise<void> => {
   const authHeader = req.headers.authorization;
@@ -61,10 +62,16 @@ export const optionalAuth = async (
   if (authHeader && authHeader.startsWith('Bearer ')) {
     const token = authHeader.substring(7);
     
-    // TODO: Implement actual token verification
-    if (token !== 'invalid') {
-      req.userId = 'user-123';
-      req.sessionId = 'session-456';
+    try {
+      const { data: { user }, error } = await supabase.auth.getUser(token);
+      
+      if (!error && user) {
+        req.userId = user.id;
+        req.user = user;
+        req.sessionId = `session-${user.id}-${Date.now()}`;
+      }
+    } catch (error) {
+      console.error('Optional auth error:', error);
     }
   }
   

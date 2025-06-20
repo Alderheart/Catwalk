@@ -2,7 +2,7 @@ import { PrismaClient } from '@prisma/client';
 import { withAccelerate } from '@prisma/extension-accelerate';
 
 declare global {
-  var prisma: PrismaClient | undefined;
+  var prisma: any;
 }
 
 // Serverless-optimized Prisma client

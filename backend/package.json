@@ -30,6 +30,7 @@
   "dependencies": {
     "@prisma/client": "^5.7.0",
     "@prisma/extension-accelerate": "^2.0.1",
+    "@supabase/supabase-js": "^2.50.0",
     "aws-lambda": "^1.0.7",
     "compression": "^1.8.0",
     "cors": "^2.8.5",

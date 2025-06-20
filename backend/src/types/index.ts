@@ -1,8 +1,10 @@
 import { Request } from 'express';
+import { User as SupabaseUser } from '@supabase/supabase-js';
 
 export interface AuthenticatedRequest extends Request {
   userId?: string;
   sessionId?: string;
+  user?: SupabaseUser;
 }
 
 export interface ApiResponse<T = any> {
@@ -29,10 +31,11 @@ export interface PaginationQuery {
 export interface Cat {
   id: string;
   name: string;
-  age: number;
-  breed: string;
-  spriteUrl: string;
-  ownerId: string;
+  gender: 'male' | 'female';
+  moons: number;
+  skill: string;
+  trait: string;
+  userId: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -44,3 +47,4 @@ export interface User {
   createdAt: Date;
   updatedAt: Date;
 }
+

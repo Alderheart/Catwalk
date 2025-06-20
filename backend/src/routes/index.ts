@@ -1,12 +1,11 @@
 import { Router } from 'express';
+import authRouter from './auth';
 import catsRouter from './cats';
-import expeditionsRouter from './expeditions';
-import marketplaceRouter from './marketplace';
 
 const router = Router();
 
 // Health check endpoint
-router.get('/health', (req, res) => {
+router.get('/health', (_req, res) => {
   res.json({
     success: true,
     data: {
@@ -18,8 +17,7 @@ router.get('/health', (req, res) => {
 });
 
 // Mount route modules
+router.use('/auth', authRouter);
 router.use('/cats', catsRouter);
-router.use('/expeditions', expeditionsRouter);
-router.use('/marketplace', marketplaceRouter);
 
 export default router;

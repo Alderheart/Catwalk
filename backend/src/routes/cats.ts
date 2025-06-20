@@ -1,46 +1,40 @@
 import { Router, Response } from 'express';
 import { AuthenticatedRequest, ApiResponse, Cat, PaginationQuery } from '../types';
 import { authMiddleware } from '../middleware/auth';
+import { supabase } from '../lib/supabase';
 
 const router = Router();
 
 // Get all cats for authenticated user
 router.get('/', authMiddleware, async (req: AuthenticatedRequest, res: Response) => {
   try {
-    const { page = 1, limit = 20, sortBy = 'createdAt', sortOrder = 'desc' } = req.query as PaginationQuery;
+    const { page = 1, limit = 20, sortBy = 'created_at', sortOrder = 'desc' } = req.query as PaginationQuery;
+    const offset = (Number(page) - 1) * Number(limit);
     
-    // TODO: Implement actual database query
-    const mockCats: Cat[] = [
-      {
-        id: 'cat-1',
-        name: 'Whiskers',
-        level: 5,
-        experience: 250,
-        health: 100,
-        maxHealth: 100,
-        energy: 80,
-        maxEnergy: 100,
-        strength: 15,
-        agility: 20,
-        intelligence: 10,
-        ownerId: req.userId!,
-        createdAt: new Date(),
-        updatedAt: new Date()
-      }
-    ];
+    const { data: cats, error, count } = await supabase
+      .from('cats')
+      .select('*', { count: 'exact' })
+      .eq('user_id', req.userId!)
+      .order(sortBy, { ascending: sortOrder === 'asc' })
+      .range(offset, offset + Number(limit) - 1);
+    
+    if (error) {
+      throw error;
+    }
     
     const response: ApiResponse<Cat[]> = {
       success: true,
-      data: mockCats,
+      data: cats || [],
       meta: {
         page: Number(page),
         limit: Number(limit),
-        total: mockCats.length
+        total: count || 0
       }
     };
     
     res.json(response);
   } catch (error) {
+    console.error('Error fetching cats:', error);
     res.status(500).json({
       success: false,
       error: {
@@ -56,31 +50,35 @@ router.get('/:catId', authMiddleware, async (req: AuthenticatedRequest, res: Res
   try {
     const { catId } = req.params;
     
-    // TODO: Implement actual database query
-    const mockCat: Cat = {
-      id: catId,
-      name: 'Whiskers',
-      level: 5,
-      experience: 250,
-      health: 100,
-      maxHealth: 100,
-      energy: 80,
-      maxEnergy: 100,
-      strength: 15,
-      agility: 20,
-      intelligence: 10,
-      ownerId: req.userId!,
-      createdAt: new Date(),
-      updatedAt: new Date()
-    };
+    const { data: cat, error } = await supabase
+      .from('cats')
+      .select('*')
+      .eq('id', catId)
+      .eq('user_id', req.userId!)
+      .single();
+    
+    if (error) {
+      if (error.code === 'PGRST116') {
+        res.status(404).json({
+          success: false,
+          error: {
+            code: 'NOT_FOUND',
+            message: 'Cat not found'
+          }
+        });
+        return;
+      }
+      throw error;
+    }
     
     const response: ApiResponse<Cat> = {
       success: true,
-      data: mockCat
+      data: cat
     };
     
     res.json(response);
   } catch (error) {
+    console.error('Error fetching cat:', error);
     res.status(500).json({
       success: false,
       error: {
@@ -94,7 +92,7 @@ router.get('/:catId', authMiddleware, async (req: AuthenticatedRequest, res: Res
 // Create new cat
 router.post('/', authMiddleware, async (req: AuthenticatedRequest, res: Response) => {
   try {
-    const { name } = req.body;
+    const { name, gender, skill, trait } = req.body;
     
     if (!name || typeof name !== 'string') {
       res.status(400).json({
@@ -107,23 +105,35 @@ router.post('/', authMiddleware, async (req: AuthenticatedRequest, res: Response
       return;
     }
     
-    // TODO: Implement actual cat creation
-    const newCat: Cat = {
-      id: 'cat-new',
+    if (!gender || !['male', 'female'].includes(gender)) {
+      res.status(400).json({
+        success: false,
+        error: {
+          code: 'INVALID_INPUT',
+          message: 'Valid gender (male/female) is required'
+        }
+      });
+      return;
+    }
+    
+    const newCatData = {
       name,
-      level: 1,
-      experience: 0,
-      health: 100,
-      maxHealth: 100,
-      energy: 100,
-      maxEnergy: 100,
-      strength: 10,
-      agility: 10,
-      intelligence: 10,
-      ownerId: req.userId!,
-      createdAt: new Date(),
-      updatedAt: new Date()
+      gender,
+      moons: 6, // Starting age
+      skill: skill || 'hunting',
+      trait: trait || 'loyal',
+      user_id: req.userId!
     };
+    
+    const { data: newCat, error } = await supabase
+      .from('cats')
+      .insert(newCatData)
+      .select()
+      .single();
+    
+    if (error) {
+      throw error;
+    }
     
     const response: ApiResponse<Cat> = {
       success: true,
@@ -132,6 +142,7 @@ router.post('/', authMiddleware, async (req: AuthenticatedRequest, res: Response
     
     res.status(201).json(response);
   } catch (error) {
+    console.error('Error creating cat:', error);
     res.status(500).json({
       success: false,
       error: {
@@ -148,23 +159,45 @@ router.patch('/:catId', authMiddleware, async (req: AuthenticatedRequest, res: R
     const { catId } = req.params;
     const updates = req.body;
     
-    // TODO: Implement actual update logic
-    const updatedCat: Cat = {
-      id: catId,
-      name: updates.name || 'Whiskers',
-      level: 5,
-      experience: 250,
-      health: 100,
-      maxHealth: 100,
-      energy: 80,
-      maxEnergy: 100,
-      strength: 15,
-      agility: 20,
-      intelligence: 10,
-      ownerId: req.userId!,
-      createdAt: new Date(),
-      updatedAt: new Date()
-    };
+    // Remove fields that shouldn't be updated
+    delete updates.id;
+    delete updates.user_id;
+    delete updates.created_at;
+    delete updates.updated_at;
+    
+    // Validate gender if provided
+    if (updates.gender && !['male', 'female'].includes(updates.gender)) {
+      res.status(400).json({
+        success: false,
+        error: {
+          code: 'INVALID_INPUT',
+          message: 'Invalid gender value'
+        }
+      });
+      return;
+    }
+    
+    const { data: updatedCat, error } = await supabase
+      .from('cats')
+      .update(updates)
+      .eq('id', catId)
+      .eq('user_id', req.userId!)
+      .select()
+      .single();
+    
+    if (error) {
+      if (error.code === 'PGRST116') {
+        res.status(404).json({
+          success: false,
+          error: {
+            code: 'NOT_FOUND',
+            message: 'Cat not found'
+          }
+        });
+        return;
+      }
+      throw error;
+    }
     
     const response: ApiResponse<Cat> = {
       success: true,
@@ -173,11 +206,40 @@ router.patch('/:catId', authMiddleware, async (req: AuthenticatedRequest, res: R
     
     res.json(response);
   } catch (error) {
+    console.error('Error updating cat:', error);
     res.status(500).json({
       success: false,
       error: {
         code: 'SERVER_ERROR',
         message: 'Failed to update cat'
+      }
+    });
+  }
+});
+
+// Delete cat
+router.delete('/:catId', authMiddleware, async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const { catId } = req.params;
+    
+    const { error } = await supabase
+      .from('cats')
+      .delete()
+      .eq('id', catId)
+      .eq('user_id', req.userId!);
+    
+    if (error) {
+      throw error;
+    }
+    
+    res.status(204).send();
+  } catch (error) {
+    console.error('Error deleting cat:', error);
+    res.status(500).json({
+      success: false,
+      error: {
+        code: 'SERVER_ERROR',
+        message: 'Failed to delete cat'
       }
     });
   }

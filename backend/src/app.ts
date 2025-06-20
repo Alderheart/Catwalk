@@ -51,7 +51,7 @@ app.use('/api', limiter);
 app.use('/api/v1', routes);
 
 // Root endpoint
-app.get('/', (req: Request, res: Response) => {
+app.get('/', (_req: Request, res: Response) => {
   res.json({
     success: true,
     data: {
@@ -63,7 +63,7 @@ app.get('/', (req: Request, res: Response) => {
 });
 
 // 404 handler
-app.use((req: Request, res: Response) => {
+app.use((_req: Request, res: Response) => {
   const response: ApiResponse = {
     success: false,
     error: {
@@ -75,7 +75,7 @@ app.use((req: Request, res: Response) => {
 });
 
 // Error handling middleware
-app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
+app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
   console.error('Error:', err);
   
   const response: ApiResponse = {
