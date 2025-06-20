@@ -6,7 +6,7 @@ const TopHeader: React.FC = () => {
   
   return (
     <header 
-      className="bg-green-800 text-white shadow-lg"
+      className="bg-white text-gray-500 shadow-lg"
       style={{
         paddingTop: hasNotch ? `${safeAreaTop}px` : '0px'
       }}

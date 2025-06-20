@@ -1,6 +1,7 @@
 import Camp from './components/Camp'
 import BottomTabBar from './components/BottomTabBar'
 import TopHeader from './components/TopHeader'
+import CatsList from './components/CatsList'
 import { useTabBarStore } from './stores/tabBarStore'
 
 function App() {
@@ -15,11 +16,7 @@ function App() {
       case 'camp':
         return <Camp />
       case 'cats':
-        return (
-          <div className="h-full w-full overflow-hidden bg-gradient-to-b from-blue-900 to-blue-950 p-4 flex items-center justify-center">
-            <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white text-center">Cats (Coming Soon)</h1>
-          </div>
-        )
+        return <CatsList />
       case 'expeditions':
         return (
           <div className="h-full w-full overflow-hidden bg-gradient-to-b from-purple-900 to-purple-950 p-4 flex items-center justify-center">
