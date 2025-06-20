@@ -11,12 +11,19 @@ import { useAuthStore } from './stores/authStore'
 
 function App() {
   const { activeTab, showTabBar, setActiveTab } = useTabBarStore()
-  const { isAuthenticated, checkAuthStatus } = useAuthStore()
+  const { isAuthenticated, isLoading, checkAuthStatus } = useAuthStore()
 
   // Check auth status on app load
   useEffect(() => {
     checkAuthStatus()
   }, [])
+
+  // Set default tab to camp when user becomes authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      setActiveTab('camp')
+    }
+  }, [isAuthenticated, setActiveTab])
 
   const handleTabChange = (tabId: string) => {
     setActiveTab(tabId)
@@ -43,7 +50,18 @@ function App() {
     }
   }
 
-  // Show auth page if not authenticated
+  // Show loading or auth page if not authenticated
+  if (isLoading) {
+    return (
+      <div className="h-full w-full flex items-center justify-center bg-gray-900">
+        <div className="text-white text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
+          <p className="text-lg">Loading...</p>
+        </div>
+      </div>
+    )
+  }
+
   if (!isAuthenticated) {
     return <AuthPage />
   }

@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import type { Cat } from '../types/Cat';
+import { getCatSpriteUrl } from '../utils/catSprites';
 
 interface CatModalProps {
   cat: Cat | null;
@@ -52,7 +53,7 @@ const CatModal: React.FC<CatModalProps> = ({ cat, onClose }) => {
         {/* Cat sprite */}
         <div className="flex justify-center mb-4">
           <img
-            src={cat.spriteUrl}
+            src={getCatSpriteUrl(cat)}
             alt={cat.name}
             className="w-32 h-32 object-contain"
             style={{ imageRendering: 'pixelated' }}
@@ -64,10 +65,10 @@ const CatModal: React.FC<CatModalProps> = ({ cat, onClose }) => {
           <h2 className="text-2xl font-bold mb-2">{cat.name}</h2>
           <div className="space-y-2 text-gray-600">
             <p>
-              <span className="font-medium">Age:</span> {cat.age} moons
+              <span className="font-medium">Age:</span> {cat.moons} moons
             </p>
             <p>
-              <span className="font-medium">Breed:</span> {cat.breed}
+              <span className="font-medium">Breed:</span> {cat.breed || 'Unknown'}
             </p>
           </div>
         </div>

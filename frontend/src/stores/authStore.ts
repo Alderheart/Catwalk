@@ -39,7 +39,7 @@ const clearStoredTokens = () => {
 export const useAuthStore = create<AuthState>((set, get) => ({
   user: null,
   isAuthenticated: false,
-  isLoading: false,
+  isLoading: true,
   error: null,
 
   signup: async (data: SignupData) => {
@@ -157,11 +157,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     if (token) {
       // In a real app, you'd verify the token with the server
       // For now, just assume it's valid if it exists
-      set({ isAuthenticated: true });
+      set({ isAuthenticated: true, isLoading: false });
       
       // TODO: Add token validation and refresh logic
     } else {
-      set({ isAuthenticated: false, user: null });
+      set({ isAuthenticated: false, user: null, isLoading: false });
     }
   },
 }));
