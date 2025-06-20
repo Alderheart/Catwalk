@@ -112,7 +112,7 @@ const AdminPanel: React.FC = () => {
               Create Random Cat
             </button>
             <button
-              onClick={fetchCats}
+              onClick={() => fetchCats(true)}
               disabled={isLoading}
               className="bg-gray-600 hover:bg-gray-700 disabled:bg-gray-500 text-white px-4 py-2 rounded-md transition-colors"
             >

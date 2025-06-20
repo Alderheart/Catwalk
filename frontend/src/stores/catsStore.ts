@@ -7,9 +7,10 @@ interface CatsState {
   cats: Cat[];
   isLoading: boolean;
   error: string | null;
+  lastFetch: number | null;
   
   // Actions
-  fetchCats: () => Promise<void>;
+  fetchCats: (force?: boolean) => Promise<void>;
   createCat: (data: CreateCatData) => Promise<boolean>;
   updateCat: (catId: string, data: UpdateCatData) => Promise<boolean>;
   deleteCat: (catId: string) => Promise<boolean>;
@@ -20,8 +21,18 @@ export const useCatsStore = create<CatsState>((set, get) => ({
   cats: [],
   isLoading: false,
   error: null,
+  lastFetch: null,
 
-  fetchCats: async () => {
+  fetchCats: async (force = false) => {
+    const state = get();
+    const now = Date.now();
+    const cacheExpiry = 2 * 60 * 1000; // 2 minutes cache
+    
+    // Skip fetch if we have recent data and not forcing
+    if (!force && state.lastFetch && (now - state.lastFetch) < cacheExpiry && state.cats.length > 0) {
+      return;
+    }
+    
     set({ isLoading: true, error: null });
     
     try {
@@ -32,6 +43,7 @@ export const useCatsStore = create<CatsState>((set, get) => ({
           cats: response.data,
           isLoading: false,
           error: null,
+          lastFetch: now,
         });
       } else {
         set({
@@ -60,6 +72,7 @@ export const useCatsStore = create<CatsState>((set, get) => ({
           cats: [...currentCats, response.data],
           isLoading: false,
           error: null,
+          lastFetch: Date.now(), // Update cache timestamp
         });
         // New cat will get a position when placement hook runs
         return true;
@@ -96,6 +109,7 @@ export const useCatsStore = create<CatsState>((set, get) => ({
           cats: updatedCats,
           isLoading: false,
           error: null,
+          lastFetch: Date.now(), // Update cache timestamp
         });
         return true;
       } else {
@@ -132,6 +146,7 @@ export const useCatsStore = create<CatsState>((set, get) => ({
           cats: filteredCats,
           isLoading: false,
           error: null,
+          lastFetch: Date.now(), // Update cache timestamp
         });
         return true;
       } else {
