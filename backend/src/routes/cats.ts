@@ -92,7 +92,7 @@ router.get('/:catId', authMiddleware, async (req: AuthenticatedRequest, res: Res
 // Create new cat
 router.post('/', authMiddleware, async (req: AuthenticatedRequest, res: Response) => {
   try {
-    const { name, gender, skill, trait } = req.body;
+    const { name, gender, moons, skill, trait, breed } = req.body;
     
     if (!name || typeof name !== 'string') {
       res.status(400).json({
@@ -119,9 +119,10 @@ router.post('/', authMiddleware, async (req: AuthenticatedRequest, res: Response
     const newCatData = {
       name,
       gender,
-      moons: 6, // Starting age
+      moons: moons || 6, // Use provided age or default to 6
       skill: skill || 'hunting',
       trait: trait || 'loyal',
+      breed: breed || null, // Use provided breed or null
       user_id: req.userId!
     };
     

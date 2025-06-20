@@ -35,6 +35,7 @@ export interface Cat {
   moons: number;
   skill: string;
   trait: string;
+  breed?: string;
   userId: string;
   createdAt: Date;
   updatedAt: Date;

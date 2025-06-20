@@ -29,15 +29,19 @@ export interface CatResponse {
 export interface CreateCatData {
   name: string;
   gender: 'male' | 'female';
+  moons: number;
   skill: string;
   trait: string;
+  breed?: string;
 }
 
 export interface UpdateCatData {
   name?: string;
   gender?: 'male' | 'female';
+  moons?: number;
   skill?: string;
   trait?: string;
+  breed?: string;
 }
 
 class CatsService {

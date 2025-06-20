@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useCatsStore } from '../stores/catsStore';
-import { getCatSpriteUrl, getAvailableSkills, getAvailableTraits } from '../utils/catSprites';
+import { getCatSpriteUrl, getAvailableSkills, getAvailableTraits, getAvailableBreeds } from '../utils/catSprites';
 import type { Cat } from '../types/Cat';
 
 const AdminPanel: React.FC = () => {
@@ -11,8 +11,10 @@ const AdminPanel: React.FC = () => {
   const [formData, setFormData] = useState({
     name: '',
     gender: 'male' as 'male' | 'female',
+    moons: 6,
     skill: 'hunting',
     trait: 'loyal',
+    breed: 'ginger',
   });
 
   // Edit state
@@ -32,7 +34,7 @@ const AdminPanel: React.FC = () => {
 
     const success = await createCat(formData);
     if (success) {
-      setFormData({ name: '', gender: 'male', skill: 'hunting', trait: 'loyal' });
+      setFormData({ name: '', gender: 'male', moons: 6, skill: 'hunting', trait: 'loyal', breed: 'ginger' });
       setShowCreateForm(false);
     }
   };
@@ -58,12 +60,15 @@ const AdminPanel: React.FC = () => {
     ];
     const skills = getAvailableSkills();
     const traits = getAvailableTraits();
+    const breeds = getAvailableBreeds();
     
     return {
       name: names[Math.floor(Math.random() * names.length)],
       gender: Math.random() > 0.5 ? 'male' : 'female' as 'male' | 'female',
+      moons: Math.floor(Math.random() * 120) + 1, // 1-120 moons (0-10 years)
       skill: skills[Math.floor(Math.random() * skills.length)],
       trait: traits[Math.floor(Math.random() * traits.length)],
+      breed: breeds[Math.floor(Math.random() * breeds.length)],
     };
   };
 
@@ -133,7 +138,7 @@ const AdminPanel: React.FC = () => {
                 />
               </div>
               
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-3 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-1">Gender</label>
                   <select
@@ -147,6 +152,34 @@ const AdminPanel: React.FC = () => {
                 </div>
                 
                 <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-1">Age (moons)</label>
+                  <input
+                    type="number"
+                    min="1"
+                    max="200"
+                    value={formData.moons}
+                    onChange={(e) => setFormData({ ...formData, moons: parseInt(e.target.value) || 6 })}
+                    className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white"
+                    required
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-1">Breed</label>
+                  <select
+                    value={formData.breed}
+                    onChange={(e) => setFormData({ ...formData, breed: e.target.value })}
+                    className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white"
+                  >
+                    {getAvailableBreeds().map(breed => (
+                      <option key={breed} value={breed}>{breed}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div>
                   <label className="block text-sm font-medium text-gray-300 mb-1">Skill</label>
                   <select
                     value={formData.skill}
@@ -158,19 +191,19 @@ const AdminPanel: React.FC = () => {
                     ))}
                   </select>
                 </div>
-              </div>
               
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-1">Trait</label>
-                <select
-                  value={formData.trait}
-                  onChange={(e) => setFormData({ ...formData, trait: e.target.value })}
-                  className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white"
-                >
-                  {getAvailableTraits().map(trait => (
-                    <option key={trait} value={trait}>{trait}</option>
-                  ))}
-                </select>
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-1">Trait</label>
+                  <select
+                    value={formData.trait}
+                    onChange={(e) => setFormData({ ...formData, trait: e.target.value })}
+                    className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white"
+                  >
+                    {getAvailableTraits().map(trait => (
+                      <option key={trait} value={trait}>{trait}</option>
+                    ))}
+                  </select>
+                </div>
               </div>
               
               <button
@@ -218,7 +251,10 @@ const AdminPanel: React.FC = () => {
                   <div className="flex-1 min-w-0">
                     <h4 className="font-semibold text-white truncate">{cat.name}</h4>
                     <p className="text-sm text-gray-300">
-                      {cat.gender} • {cat.moons} moons • {cat.skill} • {cat.trait}
+                      {cat.gender} • {cat.moons} moons • {cat.breed || 'unknown breed'}
+                    </p>
+                    <p className="text-sm text-gray-400">
+                      {cat.skill} • {cat.trait}
                     </p>
                   </div>
                   

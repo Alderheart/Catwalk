@@ -10,15 +10,15 @@ const SPRITE_FILES = [
   '/assets/sprites/cats/Cat-6-Sitting.png',
 ];
 
-// Breed to sprite mapping (for now)
+// Breed to sprite mapping
 const BREED_SPRITE_MAP: Record<string, string> = {
-  'Maine Coon': SPRITE_FILES[0],
-  'Russian Blue': SPRITE_FILES[1],
-  'Calico': SPRITE_FILES[2],
-  'Norwegian Forest Cat': SPRITE_FILES[3],
-  'Tabby': SPRITE_FILES[4],
-  'Siamese': SPRITE_FILES[5],
-  // Default breeds if none specified
+  'ginger': SPRITE_FILES[0],     // Cat 1 - Ginger
+  'black': SPRITE_FILES[1],      // Cat 2 - Black
+  'siamese': SPRITE_FILES[2],    // Cat 3 - Siamese
+  'sphynx': SPRITE_FILES[3],     // Cat 4 - Sphynx
+  'ragdoll': SPRITE_FILES[4],    // Cat 5 - Ragdoll
+  'tabby': SPRITE_FILES[5],      // Cat 6 - Tabby
+  // Skill fallbacks if no breed specified
   'hunting': SPRITE_FILES[0], // Default for hunting skill
   'fighting': SPRITE_FILES[1], // Default for fighting skill
   'climbing': SPRITE_FILES[2], // Default for climbing skill
@@ -53,12 +53,12 @@ export function getCatSpriteUrl(cat: Cat): string {
  */
 export function getAvailableBreeds(): string[] {
   return [
-    'Maine Coon',
-    'Russian Blue', 
-    'Calico',
-    'Norwegian Forest Cat',
-    'Tabby',
-    'Siamese',
+    'ginger',
+    'black',
+    'siamese',
+    'sphynx',
+    'ragdoll',
+    'tabby',
   ];
 }
 
