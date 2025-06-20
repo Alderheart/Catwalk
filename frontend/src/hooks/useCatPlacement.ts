@@ -1,6 +1,8 @@
 import { useMemo } from 'react';
 import type { Cat } from '../types/Cat';
 import { campConfig } from '../config/campConfig';
+import { getCatSpriteUrl } from '../utils/catSprites';
+import { useCatPositionsStore } from '../stores/catPositionsStore';
 
 /**
  * Extended cat interface that includes positioning and visual properties
@@ -17,6 +19,8 @@ export interface CatWithPosition extends Cat {
   rotation?: number;
   /** Whether sprite should be horizontally flipped (default: false) */
   mirrored?: boolean;
+  /** URL for the cat's sprite image */
+  spriteUrl: string;
 }
 
 /**
@@ -55,6 +59,7 @@ export const useCatPlacement = (
   cats: Cat[], 
   options: CatPlacementOptions = {}
 ) => {
+  const { getPosition, setPosition } = useCatPositionsStore();
   const {
     minX = campConfig.placement.default.minX,
     maxX = campConfig.placement.default.maxX,
@@ -83,39 +88,61 @@ export const useCatPlacement = (
 
     // Place each cat with position and visual properties
     for (const cat of cats) {
-      let x: number, y: number;
-      let attempts = 0;
+      // Check if we have cached position for this cat
+      const cachedPosition = getPosition(cat.id);
+      
+      if (cachedPosition) {
+        // Use cached position
+        placedCats.push({
+          ...cat,
+          ...cachedPosition
+        });
+      } else {
+        // Generate new position for this cat
+        let x: number, y: number;
+        let attempts = 0;
 
-      // Generate random position, retrying if overlap prevention is enabled
-      do {
-        x = Math.random() * (adjustedMaxX - adjustedMinX) + adjustedMinX;
-        y = Math.random() * (adjustedMaxY - adjustedMinY) + adjustedMinY;
-        attempts++;
-      } while (
-        avoidOverlap && 
-        attempts < campConfig.spacing.maxPlacementAttempts && 
-        placedCats.some(placedCat => {
-          // Calculate Euclidean distance between cats
-          const distance = Math.sqrt(
-            Math.pow(placedCat.x - x, 2) + Math.pow(placedCat.y - y, 2)
-          );
-          return distance < minDistance;
-        })
-      );
+        // Generate random position, retrying if overlap prevention is enabled
+        do {
+          x = Math.random() * (adjustedMaxX - adjustedMinX) + adjustedMinX;
+          y = Math.random() * (adjustedMaxY - adjustedMinY) + adjustedMinY;
+          attempts++;
+        } while (
+          avoidOverlap && 
+          attempts < campConfig.spacing.maxPlacementAttempts && 
+          placedCats.some(placedCat => {
+            // Calculate Euclidean distance between cats
+            const distance = Math.sqrt(
+              Math.pow(placedCat.x - x, 2) + Math.pow(placedCat.y - y, 2)
+            );
+            return distance < minDistance;
+          })
+        );
 
-      // Add positioned cat with default visual properties
-      placedCats.push({
-        ...cat,
-        x,
-        y,
-        scale: campConfig.effects.defaultScale,
-        rotation: campConfig.effects.defaultRotation,
-        mirrored: Math.random() < campConfig.effects.mirrorChance
-      });
+        // Create position data
+        const scale = campConfig.effects.defaultScale;
+        const rotation = campConfig.effects.defaultRotation;
+        const mirrored = Math.random() < campConfig.effects.mirrorChance;
+        const spriteUrl = getCatSpriteUrl(cat);
+
+        // Cache the position
+        setPosition(cat.id, { x, y, scale, rotation, mirrored, spriteUrl });
+
+        // Add positioned cat with visual properties
+        placedCats.push({
+          ...cat,
+          x,
+          y,
+          scale,
+          rotation,
+          mirrored,
+          spriteUrl
+        });
+      }
     }
 
     return placedCats;
-  }, [cats, adjustedMinX, adjustedMaxX, adjustedMinY, adjustedMaxY, avoidOverlap, minDistance]);
+  }, [cats, adjustedMinX, adjustedMaxX, adjustedMinY, adjustedMaxY, avoidOverlap, minDistance, getPosition, setPosition]);
 
   return catsWithPositions;
 };

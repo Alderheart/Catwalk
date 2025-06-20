@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { mockCats } from '../data/mockCats';
 import type { Cat } from '../types/Cat';
 import CatModal from './CatModal';
 import CampCat from './CampCat';
@@ -7,12 +6,19 @@ import { useCatPlacement } from '../hooks/useCatPlacement';
 import type { CatWithPosition } from '../hooks/useCatPlacement';
 import { campConfig } from '../config/campConfig';
 import { spriteConfig } from '../config/spriteConfig';
+import { useCatsStore } from '../stores/catsStore';
 
 
 const Camp: React.FC = () => {
   const [selectedCat, setSelectedCat] = useState<Cat | null>(null);
   const [spriteSize, setSpriteSize] = useState<number>(spriteConfig.sizes.small);
+  const { cats, isLoading, fetchCats } = useCatsStore();
   
+  // Fetch cats when component mounts
+  useEffect(() => {
+    fetchCats();
+  }, []);
+
   // Responsive sprite sizing
   useEffect(() => {
     const updateSpriteSize = () => {
@@ -31,7 +37,7 @@ const Camp: React.FC = () => {
   }, []);
   
   // Use the placement hook with config values
-  const catsWithPositions = useCatPlacement(mockCats, {
+  const catsWithPositions = useCatPlacement(cats, {
     spriteSize: spriteSize,
   });
 
@@ -47,6 +53,17 @@ const Camp: React.FC = () => {
   const handleCloseModal = () => {
     setSelectedCat(null);
   };
+
+  if (isLoading) {
+    return (
+      <div className={`h-full w-full overflow-hidden bg-gradient-to-b ${campConfig.styling.background.from} ${campConfig.styling.background.to} safe-area-all flex items-center justify-center`}>
+        <div className="text-white text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
+          <p className="text-lg">Loading camp...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={`h-full w-full overflow-hidden bg-gradient-to-b ${campConfig.styling.background.from} ${campConfig.styling.background.to} safe-area-all flex flex-col`}>

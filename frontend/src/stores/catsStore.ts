@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import type { Cat } from '../types/Cat';
 import { catsService, CreateCatData, UpdateCatData } from '../services/catsService';
+import { useCatPositionsStore } from './catPositionsStore';
 
 interface CatsState {
   cats: Cat[];
@@ -60,6 +61,7 @@ export const useCatsStore = create<CatsState>((set, get) => ({
           isLoading: false,
           error: null,
         });
+        // New cat will get a position when placement hook runs
         return true;
       } else {
         set({
@@ -122,6 +124,9 @@ export const useCatsStore = create<CatsState>((set, get) => ({
         // Remove the cat from the current list
         const currentCats = get().cats;
         const filteredCats = currentCats.filter(cat => cat.id !== catId);
+        
+        // Remove cached position for deleted cat
+        useCatPositionsStore.getState().removePosition(catId);
         
         set({
           cats: filteredCats,
