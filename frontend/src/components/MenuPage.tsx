@@ -1,7 +1,9 @@
 import { useAuthStore } from '../stores/authStore';
+import { useTabBarStore } from '../stores/tabBarStore';
 
 export default function MenuPage() {
   const { user, signout } = useAuthStore();
+  const { setActiveTab } = useTabBarStore();
 
   const handleLogout = async () => {
     if (confirm('Are you sure you want to sign out?')) {
@@ -31,6 +33,18 @@ export default function MenuPage() {
         
         {/* Menu Options */}
         <div className="space-y-3">
+          {/* Admin Panel */}
+          <button 
+            onClick={() => setActiveTab('admin')}
+            className="w-full bg-purple-800 hover:bg-purple-700 text-white p-4 rounded-lg text-left transition-colors duration-200"
+          >
+            <div className="flex items-center justify-between">
+              <span className="font-medium">Admin Panel</span>
+              <span className="text-gray-400">→</span>
+            </div>
+            <p className="text-sm text-gray-400 mt-1">Create and manage cats</p>
+          </button>
+
           {/* Settings */}
           <button className="w-full bg-gray-800 hover:bg-gray-700 text-white p-4 rounded-lg text-left transition-colors duration-200">
             <div className="flex items-center justify-between">

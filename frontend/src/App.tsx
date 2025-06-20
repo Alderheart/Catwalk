@@ -5,6 +5,7 @@ import TopHeader from './components/TopHeader'
 import CatsList from './components/CatsList'
 import AuthPage from './components/AuthPage'
 import MenuPage from './components/MenuPage'
+import AdminPanel from './components/AdminPanel'
 import { useTabBarStore } from './stores/tabBarStore'
 import { useAuthStore } from './stores/authStore'
 
@@ -35,6 +36,8 @@ function App() {
         )
       case 'menu':
         return <MenuPage />
+      case 'admin':
+        return <AdminPanel />
       default:
         return <Camp />
     }

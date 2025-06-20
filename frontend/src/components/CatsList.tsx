@@ -1,10 +1,18 @@
-import React, { useState } from 'react';
-import { mockCats } from '../data/mockCats';
+import React, { useState, useEffect } from 'react';
 import type { Cat } from '../types/Cat';
 import CatModal from './CatModal';
+import { useCatsStore } from '../stores/catsStore';
+import { useTabBarStore } from '../stores/tabBarStore';
+import { getCatSpriteUrl } from '../utils/catSprites';
 
 const CatsList: React.FC = () => {
   const [selectedCat, setSelectedCat] = useState<Cat | null>(null);
+  const { cats, isLoading, error, fetchCats, clearError } = useCatsStore();
+  const { setActiveTab } = useTabBarStore();
+
+  useEffect(() => {
+    fetchCats();
+  }, []);
 
   const handleCatClick = (cat: Cat) => {
     setSelectedCat(cat);
@@ -14,13 +22,51 @@ const CatsList: React.FC = () => {
     setSelectedCat(null);
   };
 
+  if (isLoading) {
+    return (
+      <div className="h-full w-full overflow-hidden bg-gradient-to-b from-blue-900 to-blue-950 safe-area-all flex items-center justify-center">
+        <div className="text-white text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
+          <p className="text-lg">Loading your cats...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="h-full w-full overflow-hidden bg-gradient-to-b from-blue-900 to-blue-950 safe-area-all flex flex-col">
       <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
         <h2 className="text-2xl font-bold text-white mb-6 text-center">All Cats</h2>
         
-        <div className="space-y-3">
-          {mockCats.map((cat) => (
+        {error && (
+          <div className="bg-red-900 border border-red-700 text-red-200 px-4 py-3 rounded-md mb-4">
+            <p>{error}</p>
+            <button 
+              onClick={clearError}
+              className="mt-2 text-red-300 hover:text-red-100 underline"
+            >
+              Dismiss
+            </button>
+          </div>
+        )}
+
+        {cats.length === 0 ? (
+          <div className="text-center text-white py-12">
+            <div className="text-6xl mb-4">🐱</div>
+            <h3 className="text-xl font-semibold mb-2">No cats yet!</h3>
+            <p className="text-gray-300 mb-6">
+              You haven't adopted any cats yet. Visit the Admin Panel to create your first cat!
+            </p>
+            <button 
+              onClick={() => setActiveTab('admin')}
+              className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg transition-colors"
+            >
+              Go to Admin Panel
+            </button>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {cats.map((cat) => (
             <div
               key={cat.id}
               onClick={() => handleCatClick(cat)}
@@ -29,7 +75,7 @@ const CatsList: React.FC = () => {
               {/* Cat sprite */}
               <div className="flex-shrink-0">
                 <img
-                  src={cat.spriteUrl}
+                  src={getCatSpriteUrl(cat)}
                   alt={cat.name}
                   className="w-20 h-20 object-contain"
                   style={{ imageRendering: 'pixelated' }}
@@ -42,8 +88,10 @@ const CatsList: React.FC = () => {
                   {cat.name}
                 </h3>
                 <div className="text-sm text-gray-300 space-y-1">
-                  <p>Age: {cat.age} moons</p>
-                  <p>Breed: {cat.breed}</p>
+                  <p>Age: {cat.moons} moons</p>
+                  <p>Gender: {cat.gender}</p>
+                  <p>Skill: {cat.skill}</p>
+                  <p>Trait: {cat.trait}</p>
                 </div>
               </div>
               
@@ -63,7 +111,8 @@ const CatsList: React.FC = () => {
               </div>
             </div>
           ))}
-        </div>
+          </div>
+        )}
       </div>
       
       {/* Cat modal */}
