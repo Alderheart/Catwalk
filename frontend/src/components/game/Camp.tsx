@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import type { Cat } from '../types/Cat';
+import type { Cat } from '../../types/Cat';
 import CatModal from './CatModal';
 import CampCat from './CampCat';
-import { useCatPlacement } from '../hooks/useCatPlacement';
-import type { CatWithPosition } from '../hooks/useCatPlacement';
-import { campConfig } from '../config/campConfig';
-import { spriteConfig } from '../config/spriteConfig';
-import { useCatsStore } from '../stores/catsStore';
-import { useTabBarStore } from '../stores/tabBarStore';
+import { useCatPlacement } from '../../hooks/useCatPlacement';
+import type { CatWithPosition } from '../../hooks/useCatPlacement';
+import { campConfig } from '../../config/campConfig';
+import { spriteConfig } from '../../config/spriteConfig';
+import { useCatsStore } from '../../stores/catsStore';
+import { useTabBarStore } from '../../stores/tabBarStore';
 
 
 const Camp: React.FC = () => {

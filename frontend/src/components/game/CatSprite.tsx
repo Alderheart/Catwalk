@@ -1,5 +1,5 @@
 import React from 'react';
-import { spriteConfig } from '../config/spriteConfig';
+import { spriteConfig } from '../../config/spriteConfig';
 
 /**
  * Props for the CatSprite component

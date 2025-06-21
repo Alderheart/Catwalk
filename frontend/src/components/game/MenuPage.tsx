@@ -1,5 +1,5 @@
-import { useAuthStore } from '../stores/authStore';
-import { useTabBarStore } from '../stores/tabBarStore';
+import { useAuthStore } from '../../stores/authStore';
+import { useTabBarStore } from '../../stores/tabBarStore';
 import { useState } from 'react';
 
 export default function MenuPage() {

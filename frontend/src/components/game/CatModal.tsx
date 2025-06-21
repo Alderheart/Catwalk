@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
-import type { Cat } from '../types/Cat';
-import { getCatSpriteUrl } from '../utils/catSprites';
+import type { Cat } from '../../types/Cat';
+import { getCatSpriteUrl } from '../../utils/catSprites';
 
 interface CatModalProps {
   cat: Cat | null;

@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { useCatsStore } from '../stores/catsStore';
-import { useAuthStore } from '../stores/authStore';
-import { getCatSpriteUrl, getAvailableSkills, getAvailableTraits, getAvailableBreeds } from '../utils/catSprites';
-import type { Cat } from '../types/Cat';
+import { useCatsStore } from '../../stores/catsStore';
+import { useAuthStore } from '../../stores/authStore';
+import { getCatSpriteUrl, getAvailableSkills, getAvailableTraits, getAvailableBreeds } from '../../utils/catSprites';
+import type { Cat } from '../../types/Cat';
 
 const AdminPanel: React.FC = () => {
-  const { cats, isLoading, error, fetchCats, createCat, updateCat, deleteCat, clearError } = useCatsStore();
+  const { cats, isLoading, error, fetchCats, createCat, deleteCat, clearError } = useCatsStore();
   const { user, updateUserCoins } = useAuthStore();
   
   // Form state for creating new cats
@@ -22,8 +22,6 @@ const AdminPanel: React.FC = () => {
     max_level: 20,
   });
 
-  // Edit state
-  const [editingCat, setEditingCat] = useState<Cat | null>(null);
   
   // Admin sections state
   const [activeSection, setActiveSection] = useState<'main' | 'cats' | 'user'>('main');
@@ -57,12 +55,6 @@ const AdminPanel: React.FC = () => {
     }
   };
 
-  const handleUpdateCat = async (cat: Cat) => {
-    const newName = prompt('Enter new name:', cat.name);
-    if (newName && newName !== cat.name) {
-      await updateCat(cat.id, { name: newName });
-    }
-  };
 
   const handleDeleteCat = async (cat: Cat) => {
     if (confirm(`Are you sure you want to delete ${cat.name}?`)) {
@@ -388,12 +380,6 @@ const AdminPanel: React.FC = () => {
                     
                     {/* Actions */}
                     <div className="flex gap-2">
-                      <button
-                        onClick={() => handleUpdateCat(cat)}
-                        className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm transition-colors"
-                      >
-                        Edit
-                      </button>
                       <button
                         onClick={() => handleDeleteCat(cat)}
                         className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-sm transition-colors"

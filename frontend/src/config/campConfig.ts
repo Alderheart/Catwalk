@@ -1,13 +1,12 @@
 /**
  * Configuration settings for camp layout and cat placement
  */
+
 export const campConfig = {
-  /** Camp container dimensions */
+  // Camp container dimensions
   dimensions: {
-    /** Width of the camp area in pixels */
-    width: 1000,
-    /** Height of the camp area in pixels */
-    height: 600,
+    width: 1000,						// Width of the camp area in pixels
+    height: 600,						// Height of the camp area in pixels
   },
 
   /** Cat placement boundaries as percentages (0-100) */

@@ -1,7 +1,6 @@
 import type { Cat } from '../types/Cat';
 import { getAuthToken } from '../stores/authStore';
-
-const API_BASE_URL = 'http://localhost:3000/api/v1';
+import { API_BASE_URL } from '../config/api';
 
 export interface CatsResponse {
   success: boolean;

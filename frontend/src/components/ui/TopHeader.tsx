@@ -1,6 +1,6 @@
 import React from 'react';
-import { useNotchDetection } from '../hooks/useNotchDetection';
-import { useAuthStore } from '../stores/authStore';
+import { useNotchDetection } from '../../hooks/useNotchDetection';
+import { useAuthStore } from '../../stores/authStore';
 
 const TopHeader: React.FC = () => {
   const { hasNotch, safeAreaTop } = useNotchDetection();

@@ -1,6 +1,5 @@
 import type { User } from '../types/User';
-
-const API_BASE_URL = 'http://localhost:3000/api/v1';
+import { API_BASE_URL } from '../config/api';
 
 export interface AuthResponse {
   success: boolean;

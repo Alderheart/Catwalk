@@ -16,30 +16,19 @@ export const spriteConfig = {
     xlarge: 256,
   },
 
-  /** Sprite rendering settings */
+  // Sprite rendering settings
   rendering: {
     /** CSS image rendering mode for pixel art */
     imageRendering: 'pixelated' as const,
     /** Object fit mode for sprites */
     objectFit: 'object-contain' as const,
-    /** Whether to use drop shadows by default */
-    useDropShadow: true,
+    useDropShadow: true, 				// Whether sprites have a drop shadow
   },
 
-  /** Popover settings */
-  popover: {
-    /** Vertical offset from sprite center in pixels */
-    offsetY: 70,
-    /** Minimum horizontal margin from edges as percentage */
-    minEdgeMargin: 15,
-  },
-
-  /** Sprite asset paths */
+  // Sprite asset paths
   paths: {
-    /** Base directory for cat sprites */
-    cats: '/assets/sprites/cats/',
-    /** File extension for sprite assets */
-    extension: '.png',
+    cats: '/assets/sprites/cats/',		// Base directory for cat sprites
+    extension: '.png',					// File extension for sprite assets
   },
 
   /** Animation and transition settings */

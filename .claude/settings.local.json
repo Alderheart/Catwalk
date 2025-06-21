@@ -18,7 +18,11 @@
       "Bash(rm:*)",
       "Bash(npm run build:*)",
       "Bash(ls:*)",
-      "Bash(./scripts/test-auth-simple.sh:*)"
+      "Bash(./scripts/test-auth-simple.sh:*)",
+      "Bash(ss:*)",
+      "Bash(rg:*)",
+      "Bash(mv:*)",
+      "Bash(grep:*)"
     ],
     "deny": []
   }

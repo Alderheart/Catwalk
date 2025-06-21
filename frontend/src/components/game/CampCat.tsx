@@ -1,6 +1,6 @@
 import CatSprite from './CatSprite';
-import type { CatWithPosition } from '../hooks/useCatPlacement';
-import { spriteConfig } from '../config/spriteConfig';
+import type { CatWithPosition } from '../../hooks/useCatPlacement';
+import { spriteConfig } from '../../config/spriteConfig';
 
 /**
  * Props for the CampCat component

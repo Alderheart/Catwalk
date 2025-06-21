@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import type { Cat } from '../types/Cat';
+import type { Cat } from '../../types/Cat';
 import CatModal from './CatModal';
-import { useCatsStore } from '../stores/catsStore';
-import { useTabBarStore } from '../stores/tabBarStore';
-import { getCatSpriteUrl } from '../utils/catSprites';
+import { useCatsStore } from '../../stores/catsStore';
+import { useTabBarStore } from '../../stores/tabBarStore';
+import { getCatSpriteUrl } from '../../utils/catSprites';
 
 const CatsList: React.FC = () => {
   const [selectedCat, setSelectedCat] = useState<Cat | null>(null);
