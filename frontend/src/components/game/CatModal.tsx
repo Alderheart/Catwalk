@@ -38,7 +38,7 @@ const CatModal: React.FC<CatModalProps> = ({ cat, onClose }) => {
       />
       
       {/* Modal */}
-      <div className="relative bg-white rounded-lg shadow-xl border border-gray-200 p-6 m-4 w-full max-w-md max-h-[80vh] overflow-y-auto">
+      <div className="relative bg-white rounded-lg shadow-xl border border-gray-200 p-6 m-4 w-full max-w-md max-h-[80vh] overflow-y-auto custom-scrollbar">
         {/* Close button */}
         <button
           onClick={onClose}

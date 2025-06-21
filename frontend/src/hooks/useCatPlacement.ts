@@ -85,6 +85,7 @@ export const useCatPlacement = (
 
   const catsWithPositions = useMemo(() => {
     const placedCats: CatWithPosition[] = [];
+    const newPositions: Array<{ id: string; position: any }> = [];
 
     // Place each cat with position and visual properties
     for (const cat of cats) {
@@ -125,8 +126,11 @@ export const useCatPlacement = (
         const mirrored = Math.random() < campConfig.effects.mirrorChance;
         const spriteUrl = getCatSpriteUrl(cat);
 
-        // Cache the position
-        setPosition(cat.id, { x, y, scale, rotation, mirrored, spriteUrl });
+        // Store position to set later (outside of render)
+        newPositions.push({
+          id: cat.id,
+          position: { x, y, scale, rotation, mirrored, spriteUrl }
+        });
 
         // Add positioned cat with visual properties
         placedCats.push({
@@ -139,6 +143,15 @@ export const useCatPlacement = (
           spriteUrl
         });
       }
+    }
+
+    // Set new positions in a side effect, not during render
+    if (newPositions.length > 0) {
+      Promise.resolve().then(() => {
+        newPositions.forEach(({ id, position }) => {
+          setPosition(id, position);
+        });
+      });
     }
 
     return placedCats;

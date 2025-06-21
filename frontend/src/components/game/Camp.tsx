@@ -57,8 +57,12 @@ const Camp: React.FC = () => {
   };
 
   const handleExpeditionsClick = () => {
-    setActiveTab('expeditions');
+    if (cats.length >= 3) {
+      setActiveTab('expeditions');
+    }
   };
+
+  const canUseExpeditions = cats.length >= 3;
 
   if (isLoading) {
     return (
@@ -83,12 +87,26 @@ const Camp: React.FC = () => {
             {/* Expeditions Button - positioned at top center like a camp entrance */}
             <button
               onClick={handleExpeditionsClick}
-              className="absolute top-4 left-1/2 transform -translate-x-1/2 bg-green-700 hover:bg-green-600 text-white px-4 py-2 rounded-lg shadow-lg border-2 border-green-500 transition-all duration-200 hover:scale-105 flex items-center gap-2 z-20"
+              disabled={!canUseExpeditions}
+              className={`absolute top-4 left-1/2 transform -translate-x-1/2 px-4 py-2 rounded-lg shadow-lg border-2 transition-all duration-200 flex items-center gap-2 z-20 ${
+                canUseExpeditions
+                  ? 'bg-green-700 hover:bg-green-600 text-white border-green-500 hover:scale-105 cursor-pointer'
+                  : 'bg-gray-600 text-gray-300 border-gray-500 cursor-not-allowed opacity-60'
+              }`}
+              title={canUseExpeditions ? 'Begin an expedition' : `Need at least 3 cats to go on expeditions (${cats.length}/3)`}
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
-              </svg>
-              <span className="font-medium">Expeditions</span>
+              {canUseExpeditions ? (
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+                </svg>
+              ) : (
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                </svg>
+              )}
+              <span className="font-medium">
+                {canUseExpeditions ? 'Expeditions' : `Expeditions (${cats.length}/3)`}
+              </span>
             </button>
             
             {/* Cats positioned using the placement system */}

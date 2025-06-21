@@ -6,6 +6,7 @@ import CatsList from './components/game/CatsList'
 import AuthPage from './components/auth/AuthPage'
 import MenuPage from './components/game/MenuPage'
 import AdminPanel from './components/admin/AdminPanel'
+import ExpeditionsPage from './components/game/ExpeditionsPage'
 import { useTabBarStore } from './stores/tabBarStore'
 import { useAuthStore } from './stores/authStore'
 
@@ -25,6 +26,7 @@ function App() {
     }
   }, [isAuthenticated, setActiveTab])
 
+
   const handleTabChange = (tabId: string) => {
     setActiveTab(tabId)
   }
@@ -42,11 +44,7 @@ function App() {
           </div>
         )
       case 'expeditions':
-        return (
-          <div className="h-full w-full overflow-hidden bg-gradient-to-b from-green-900 to-green-950 p-4 flex items-center justify-center">
-            <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white text-center">Expeditions (Coming Soon)</h1>
-          </div>
-        )
+        return <ExpeditionsPage />
       case 'menu':
         return <MenuPage />
       case 'admin':
@@ -78,12 +76,12 @@ function App() {
       <TopHeader />
       
       {/* Main content */}
-      <div className={`flex-1 w-full overflow-hidden ${showTabBar ? 'pb-16' : ''}`}>
+      <div className={`flex-1 w-full overflow-hidden ${showTabBar && activeTab !== 'expeditions' ? 'pb-16' : ''}`}>
         {renderContent()}
       </div>
       
-      {/* Bottom Tab Bar */}
-      {showTabBar && (
+      {/* Bottom Tab Bar - Hide when on expeditions page */}
+      {showTabBar && activeTab !== 'expeditions' && (
         <BottomTabBar activeTab={activeTab} onTabChange={handleTabChange} />
       )}
     </div>

@@ -46,6 +46,7 @@ export default function MenuPage() {
             <p className="text-sm text-gray-400 mt-1">Edit and manage game state</p>
           </button>
 
+
           {/* Settings */}
           <button className="w-full bg-gray-800 hover:bg-gray-700 text-white p-4 rounded-lg text-left transition-colors duration-200">
             <div className="flex items-center justify-between">

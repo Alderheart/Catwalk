@@ -29,8 +29,7 @@ export const campConfig = {
 
   /** Cat spacing and overlap settings */
   spacing: {
-    /** Whether to prevent cats from overlapping by default */
-    avoidOverlap: true,
+    avoidOverlap: true,					// Whether to prevent cats from overlapping by default
     /** Minimum distance between cats in percentage units */
     minDistance: 12,
     /** Maximum attempts to find non-overlapping position */

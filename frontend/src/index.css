@@ -73,7 +73,10 @@ body {
   overflow-x: hidden !important;
 }
 
-/* Custom scrollbar styling */
+/* Custom scrollbar styling - Reusable class for consistent scrollbars across the app
+ * Usage: Add 'custom-scrollbar' class to any scrollable element
+ * Example: <div className="overflow-y-auto custom-scrollbar">...</div>
+ */
 .custom-scrollbar::-webkit-scrollbar {
   width: 8px;
 }
