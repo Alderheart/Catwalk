@@ -4,43 +4,73 @@ export const mockCats: Cat[] = [
   {
     id: '1',
     name: 'Moonwhisker',
-    age: 36,
+    gender: 'female',
+    moons: 36,
+    skill: 'hunting',
+    trait: 'loyal',
     breed: 'Maine Coon',
-    spriteUrl: '/assets/sprites/cats/Cat-1-Sitting.png'
+    level: 5,
+    experience: 45,
+    max_level: 20
   },
   {
     id: '2',
     name: 'Shadowpelt',
-    age: 24,
+    gender: 'male',
+    moons: 24,
+    skill: 'fighting',
+    trait: 'brave',
     breed: 'Russian Blue',
-    spriteUrl: '/assets/sprites/cats/Cat-2-Sitting.png'
+    level: 3,
+    experience: 78,
+    max_level: 20
   },
   {
     id: '3',
     name: 'Daisyspring',
-    age: 18,
+    gender: 'female',
+    moons: 18,
+    skill: 'healing',
+    trait: 'kind',
     breed: 'Calico',
-    spriteUrl: '/assets/sprites/cats/Cat-3-Sitting.png'
+    level: 2,
+    experience: 23,
+    max_level: 20
   },
   {
     id: '4',
     name: 'Stormclaw',
-    age: 48,
+    gender: 'male',
+    moons: 48,
+    skill: 'tracking',
+    trait: 'fierce',
     breed: 'Norwegian Forest Cat',
-    spriteUrl: '/assets/sprites/cats/Cat-4-Sitting.png'
+    level: 8,
+    experience: 92,
+    max_level: 20
   },
   {
     id: '5',
     name: 'Honeypaw',
-    age: 8,
+    gender: 'female',
+    moons: 8,
+    skill: 'foraging',
+    trait: 'playful',
     breed: 'Tabby',
-    spriteUrl: '/assets/sprites/cats/Cat-5-Sitting.png'
+    level: 1,
+    experience: 15,
+    max_level: 20
   },
   {
     id: '6',
     name: 'Willowbreeze',
-    age: 28,
+    gender: 'female',
+    moons: 28,
+    skill: 'swimming',
+    trait: 'calm',
     breed: 'Siamese',
-    spriteUrl: '/assets/sprites/cats/Cat-6-Sitting.png'
+    level: 4,
+    experience: 67,
+    max_level: 20
   }
 ];

@@ -35,9 +35,15 @@ function App() {
         return <Camp />
       case 'cats':
         return <CatsList />
-      case 'expeditions':
+      case 'shop':
         return (
           <div className="h-full w-full overflow-hidden bg-gradient-to-b from-purple-900 to-purple-950 p-4 flex items-center justify-center">
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white text-center">Shop (Coming Soon)</h1>
+          </div>
+        )
+      case 'expeditions':
+        return (
+          <div className="h-full w-full overflow-hidden bg-gradient-to-b from-green-900 to-green-950 p-4 flex items-center justify-center">
             <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white text-center">Expeditions (Coming Soon)</h1>
           </div>
         )

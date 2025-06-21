@@ -1,11 +1,6 @@
 import { create } from 'zustand';
 import { authService, SignupData, SigninData } from '../services/authService';
-
-interface User {
-  id: string;
-  email: string;
-  username?: string;
-}
+import type { User } from '../types/User';
 
 interface AuthState {
   user: User | null;
@@ -19,10 +14,12 @@ interface AuthState {
   signout: () => Promise<void>;
   clearError: () => void;
   checkAuthStatus: () => void;
+  fetchUserProfile: () => Promise<void>;
+  updateUserCoins: (coins: number) => Promise<boolean>;
 }
 
 // Token storage helpers
-const TOKEN_KEY = 'auth_token';
+const TOKEN_KEY = 'access_token';
 const REFRESH_TOKEN_KEY = 'refresh_token';
 
 const getStoredToken = () => localStorage.getItem(TOKEN_KEY);
@@ -54,17 +51,16 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         // Store tokens
         setStoredTokens(session.access_token, session.refresh_token);
         
-        // Update state
+        // Update state temporarily, then fetch full profile
         set({
-          user: {
-            id: user.id,
-            email: user.email,
-            username: user.user_metadata?.username || data.username,
-          },
+          user: null, // Will be set by fetchUserProfile
           isAuthenticated: true,
           isLoading: false,
           error: null,
         });
+        
+        // Fetch full user profile
+        get().fetchUserProfile();
         
         return true;
       } else {
@@ -95,17 +91,16 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         // Store tokens
         setStoredTokens(session.access_token, session.refresh_token);
         
-        // Update state
+        // Update state temporarily, then fetch full profile
         set({
-          user: {
-            id: user.id,
-            email: user.email,
-            username: user.user_metadata?.username,
-          },
+          user: null, // Will be set by fetchUserProfile
           isAuthenticated: true,
           isLoading: false,
           error: null,
         });
+        
+        // Fetch full user profile
+        get().fetchUserProfile();
         
         return true;
       } else {
@@ -155,13 +150,43 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     const token = getStoredToken();
     
     if (token) {
-      // In a real app, you'd verify the token with the server
-      // For now, just assume it's valid if it exists
       set({ isAuthenticated: true, isLoading: false });
-      
-      // TODO: Add token validation and refresh logic
+      // Fetch full user profile
+      get().fetchUserProfile();
     } else {
       set({ isAuthenticated: false, user: null, isLoading: false });
+    }
+  },
+
+  fetchUserProfile: async () => {
+    try {
+      const response = await authService.getUserProfile();
+      
+      if (response.success && response.data) {
+        set({ user: response.data });
+      } else {
+        console.error('Failed to fetch user profile:', response.error?.message);
+        // Don't clear authentication, just log the error
+      }
+    } catch (error) {
+      console.error('Failed to fetch user profile:', error);
+    }
+  },
+
+  updateUserCoins: async (coins: number) => {
+    try {
+      const response = await authService.updateUserCoins(coins);
+      
+      if (response.success && response.data) {
+        set({ user: response.data });
+        return true;
+      } else {
+        set({ error: response.error?.message || 'Failed to update coins' });
+        return false;
+      }
+    } catch (error) {
+      set({ error: 'An unexpected error occurred' });
+      return false;
     }
   },
 }));

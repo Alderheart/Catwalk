@@ -1,6 +1,7 @@
 import { Router, Request, Response } from 'express';
-import { ApiResponse } from '../types';
+import { ApiResponse, AuthenticatedRequest, User } from '../types';
 import { supabase } from '../lib/supabase';
+import { authMiddleware } from '../middleware/auth';
 
 const router = Router();
 
@@ -192,6 +193,93 @@ router.post('/refresh', async (req: Request, res: Response) => {
       error: {
         code: 'SERVER_ERROR',
         message: 'Failed to refresh token'
+      }
+    });
+  }
+});
+
+// Get user profile
+router.get('/profile', authMiddleware, async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const { data: user, error } = await supabase
+      .from('users')
+      .select('*')
+      .eq('id', req.userId!)
+      .single();
+    
+    if (error) {
+      throw error;
+    }
+    
+    if (!user) {
+      res.status(404).json({
+        success: false,
+        error: {
+          code: 'USER_NOT_FOUND',
+          message: 'User profile not found'
+        }
+      });
+      return;
+    }
+    
+    const response: ApiResponse<User> = {
+      success: true,
+      data: user
+    };
+    
+    res.json(response);
+  } catch (error) {
+    console.error('Error fetching user profile:', error);
+    res.status(500).json({
+      success: false,
+      error: {
+        code: 'SERVER_ERROR',
+        message: 'Failed to fetch user profile'
+      }
+    });
+  }
+});
+
+// Update user coins
+router.patch('/profile/coins', authMiddleware, async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const { coins } = req.body;
+    
+    if (typeof coins !== 'number' || coins < 0) {
+      res.status(400).json({
+        success: false,
+        error: {
+          code: 'INVALID_INPUT',
+          message: 'Coins must be a non-negative number'
+        }
+      });
+      return;
+    }
+    
+    const { data: user, error } = await supabase
+      .from('users')
+      .update({ coins })
+      .eq('id', req.userId!)
+      .select()
+      .single();
+    
+    if (error) {
+      throw error;
+    }
+    
+    const response: ApiResponse<User> = {
+      success: true,
+      data: user
+    };
+    
+    res.json(response);
+  } catch (error) {
+    console.error('Error updating user coins:', error);
+    res.status(500).json({
+      success: false,
+      error: {
+        code: 'SERVER_ERROR',
+        message: 'Failed to update user coins'
       }
     });
   }

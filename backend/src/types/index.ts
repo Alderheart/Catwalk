@@ -36,6 +36,9 @@ export interface Cat {
   skill: string;
   trait: string;
   breed?: string;
+  level: number;
+  experience: number;
+  max_level: number;
   userId: string;
   createdAt: Date;
   updatedAt: Date;
@@ -45,6 +48,7 @@ export interface User {
   id: string;
   email: string;
   username: string;
+  coins: number;
   createdAt: Date;
   updatedAt: Date;
 }

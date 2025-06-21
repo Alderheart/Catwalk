@@ -88,6 +88,7 @@ const CatsList: React.FC = () => {
                   {cat.name}
                 </h3>
                 <div className="text-sm text-gray-300 space-y-1">
+                  <p>Level: {cat.level} / {cat.max_level}</p>
                   <p>Age: {cat.moons} moons</p>
                   <p>Gender: {cat.gender}</p>
                   <p>Skill: {cat.skill}</p>

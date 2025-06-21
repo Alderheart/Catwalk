@@ -65,6 +65,12 @@ const CatModal: React.FC<CatModalProps> = ({ cat, onClose }) => {
           <h2 className="text-2xl font-bold mb-2">{cat.name}</h2>
           <div className="space-y-2 text-gray-600">
             <p>
+              <span className="font-medium">Level:</span> {cat.level} / {cat.max_level}
+            </p>
+            <p>
+              <span className="font-medium">Experience:</span> {cat.experience} / 100
+            </p>
+            <p>
               <span className="font-medium">Age:</span> {cat.moons} moons
             </p>
             <p>

@@ -92,7 +92,7 @@ router.get('/:catId', authMiddleware, async (req: AuthenticatedRequest, res: Res
 // Create new cat
 router.post('/', authMiddleware, async (req: AuthenticatedRequest, res: Response) => {
   try {
-    const { name, gender, moons, skill, trait, breed } = req.body;
+    const { name, gender, moons, skill, trait, breed, level, experience, max_level } = req.body;
     
     if (!name || typeof name !== 'string') {
       res.status(400).json({
@@ -123,6 +123,9 @@ router.post('/', authMiddleware, async (req: AuthenticatedRequest, res: Response
       skill: skill || 'hunting',
       trait: trait || 'loyal',
       breed: breed || null, // Use provided breed or null
+      level: level || 1, // Default to level 1
+      experience: experience || 0, // Default to 0 experience
+      max_level: max_level || 20, // Default max level is 20
       user_id: req.userId!
     };
     

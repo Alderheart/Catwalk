@@ -43,7 +43,7 @@ export default function MenuPage() {
               <span className="font-medium">Admin Panel</span>
               <span className="text-gray-400">→</span>
             </div>
-            <p className="text-sm text-gray-400 mt-1">Create and manage cats</p>
+            <p className="text-sm text-gray-400 mt-1">Edit and manage game state</p>
           </button>
 
           {/* Settings */}

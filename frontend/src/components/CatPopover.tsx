@@ -61,10 +61,13 @@ const CatPopover: React.FC<CatPopoverProps> = ({ cat, position, onClose }) => {
         <h3 className="font-bold text-lg mb-2">{cat.name}</h3>
         <div className="space-y-1 text-sm text-gray-600">
           <p>
-            <span className="font-medium">Age:</span> {cat.age} moons
+            <span className="font-medium">Level:</span> {cat.level}
           </p>
           <p>
-            <span className="font-medium">Breed:</span> {cat.breed}
+            <span className="font-medium">Age:</span> {cat.moons} moons
+          </p>
+          <p>
+            <span className="font-medium">Breed:</span> {cat.breed || 'Unknown'}
           </p>
         </div>
         

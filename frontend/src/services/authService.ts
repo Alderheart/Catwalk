@@ -1,3 +1,5 @@
+import type { User } from '../types/User';
+
 const API_BASE_URL = 'http://localhost:3000/api/v1';
 
 export interface AuthResponse {
@@ -25,6 +27,15 @@ export interface SignupData {
 export interface SigninData {
   email: string;
   password: string;
+}
+
+export interface UserResponse {
+  success: boolean;
+  data?: User;
+  error?: {
+    code: string;
+    message: string;
+  };
 }
 
 class AuthService {
@@ -101,6 +112,75 @@ class AuthService {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ refresh_token: refreshToken }),
+      });
+
+      return await response.json();
+    } catch (error) {
+      return {
+        success: false,
+        error: {
+          code: 'NETWORK_ERROR',
+          message: 'Failed to connect to server',
+        },
+      };
+    }
+  }
+
+  async getUserProfile(): Promise<UserResponse> {
+    try {
+      const token = localStorage.getItem('access_token');
+      
+      if (!token) {
+        return {
+          success: false,
+          error: {
+            code: 'NO_TOKEN',
+            message: 'No authentication token found',
+          },
+        };
+      }
+
+      const response = await fetch(`${API_BASE_URL}/auth/profile`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      return await response.json();
+    } catch (error) {
+      return {
+        success: false,
+        error: {
+          code: 'NETWORK_ERROR',
+          message: 'Failed to connect to server',
+        },
+      };
+    }
+  }
+
+  async updateUserCoins(coins: number): Promise<UserResponse> {
+    try {
+      const token = localStorage.getItem('access_token');
+      
+      if (!token) {
+        return {
+          success: false,
+          error: {
+            code: 'NO_TOKEN',
+            message: 'No authentication token found',
+          },
+        };
+      }
+
+      const response = await fetch(`${API_BASE_URL}/auth/profile/coins`, {
+        method: 'PATCH',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ coins }),
       });
 
       return await response.json();
