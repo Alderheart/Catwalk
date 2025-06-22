@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useEffect, useRef } from 'react';
 import type { Cat } from '../types/Cat';
 import { campConfig } from '../config/campConfig';
 import { getCatSpriteUrl } from '../utils/catSprites';
@@ -83,9 +83,11 @@ export const useCatPlacement = (
   const adjustedMinY = Math.max(minY, spritePaddingY);
   const adjustedMaxY = Math.min(maxY, 100 - spritePaddingY);
 
+  const newPositionsRef = useRef<Array<{ id: string; position: any }>>([]);
+
   const catsWithPositions = useMemo(() => {
     const placedCats: CatWithPosition[] = [];
-    const newPositions: Array<{ id: string; position: any }> = [];
+    newPositionsRef.current = [];
 
     // Place each cat with position and visual properties
     for (const cat of cats) {
@@ -127,7 +129,7 @@ export const useCatPlacement = (
         const spriteUrl = getCatSpriteUrl(cat);
 
         // Store position to set later (outside of render)
-        newPositions.push({
+        newPositionsRef.current.push({
           id: cat.id,
           position: { x, y, scale, rotation, mirrored, spriteUrl }
         });
@@ -145,17 +147,18 @@ export const useCatPlacement = (
       }
     }
 
-    // Set new positions in a side effect, not during render
-    if (newPositions.length > 0) {
-      Promise.resolve().then(() => {
-        newPositions.forEach(({ id, position }) => {
-          setPosition(id, position);
-        });
-      });
-    }
-
     return placedCats;
-  }, [cats, adjustedMinX, adjustedMaxX, adjustedMinY, adjustedMaxY, avoidOverlap, minDistance, getPosition, setPosition]);
+  }, [cats, adjustedMinX, adjustedMaxX, adjustedMinY, adjustedMaxY, avoidOverlap, minDistance, getPosition]);
+
+  // Set new positions in useEffect to avoid side effects during render
+  useEffect(() => {
+    if (newPositionsRef.current.length > 0) {
+      newPositionsRef.current.forEach(({ id, position }) => {
+        setPosition(id, position);
+      });
+      newPositionsRef.current = [];
+    }
+  }, [catsWithPositions, setPosition]);
 
   return catsWithPositions;
 };

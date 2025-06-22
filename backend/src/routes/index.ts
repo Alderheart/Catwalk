@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import authRouter from './auth';
 import catsRouter from './cats';
+import expeditionsRouter from './expeditions';
 
 const router = Router();
 
@@ -19,5 +20,6 @@ router.get('/health', (_req, res) => {
 // Mount route modules
 router.use('/auth', authRouter);
 router.use('/cats', catsRouter);
+router.use('/expeditions', expeditionsRouter);
 
 export default router;

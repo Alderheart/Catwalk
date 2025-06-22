@@ -34,9 +34,9 @@ const CatSpriteComponent: React.FC<CatSpriteProps> = ({
       height={size}
       style={{ 
         // Ensure pixel art renders with crisp edges instead of blurring
-        imageRendering: spriteConfig.rendering.imageRendering
+        imageRendering: spriteConfig.rendering.imageRendering,
+        objectFit: spriteConfig.rendering.objectFit as React.CSSProperties['objectFit']
       }}
-      className={spriteConfig.rendering.objectFit}
     />
   );
 };

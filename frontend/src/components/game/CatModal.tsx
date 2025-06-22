@@ -83,19 +83,13 @@ const CatModal: React.FC<CatModalProps> = ({ cat, onClose }) => {
         <div className="flex flex-col gap-3">
           <button 
             className="w-full py-3 px-4 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium"
-            onClick={() => {
-              console.log('View details for', cat.name);
-              onClose();
-            }}
+            onClick={onClose}
           >
             View Details
           </button>
           <button 
             className="w-full py-3 px-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
-            onClick={() => {
-              console.log('Interact with', cat.name);
-              onClose();
-            }}
+            onClick={onClose}
           >
             Interact
           </button>
