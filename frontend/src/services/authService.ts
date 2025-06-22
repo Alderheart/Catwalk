@@ -1,5 +1,6 @@
 import type { User } from '../types/User';
 import { API_BASE_URL } from '../config/api';
+import { handleApiResponse } from '../utils/apiUtils';
 
 export interface AuthResponse {
   success: boolean;
@@ -147,7 +148,7 @@ class AuthService {
         },
       });
 
-      return await response.json();
+      return await handleApiResponse<UserResponse>(response);
     } catch (error) {
       return {
         success: false,
@@ -182,7 +183,7 @@ class AuthService {
         body: JSON.stringify({ coins }),
       });
 
-      return await response.json();
+      return await handleApiResponse<UserResponse>(response);
     } catch (error) {
       return {
         success: false,

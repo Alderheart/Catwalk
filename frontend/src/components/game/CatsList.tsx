@@ -77,7 +77,7 @@ const CatsList: React.FC = () => {
                 <img
                   src={getCatSpriteUrl(cat)}
                   alt={cat.name}
-                  className="w-20 h-20 object-contain"
+                  className="w-14 h-14 object-contain"
                   style={{ imageRendering: 'pixelated' }}
                 />
               </div>

@@ -23,7 +23,7 @@ const TOKEN_KEY = 'access_token';
 const REFRESH_TOKEN_KEY = 'refresh_token';
 
 const getStoredToken = () => localStorage.getItem(TOKEN_KEY);
-const getStoredRefreshToken = () => localStorage.getItem(REFRESH_TOKEN_KEY);
+// const getStoredRefreshToken = () => localStorage.getItem(REFRESH_TOKEN_KEY);
 const setStoredTokens = (accessToken: string, refreshToken: string) => {
   localStorage.setItem(TOKEN_KEY, accessToken);
   localStorage.setItem(REFRESH_TOKEN_KEY, refreshToken);
@@ -46,7 +46,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       const response = await authService.signup(data);
       
       if (response.success && response.data) {
-        const { user, session } = response.data;
+        const { session } = response.data;
         
         // Store tokens
         setStoredTokens(session.access_token, session.refresh_token);
@@ -86,7 +86,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       const response = await authService.signin(data);
       
       if (response.success && response.data) {
-        const { user, session } = response.data;
+        const { session } = response.data;
         
         // Store tokens
         setStoredTokens(session.access_token, session.refresh_token);
@@ -146,13 +146,38 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     set({ error: null });
   },
 
-  checkAuthStatus: () => {
+  checkAuthStatus: async () => {
     const token = getStoredToken();
     
     if (token) {
-      set({ isAuthenticated: true, isLoading: false });
-      // Fetch full user profile
-      get().fetchUserProfile();
+      // Validate token by fetching user profile
+      try {
+        const response = await authService.getUserProfile();
+        
+        if (response.success && response.data) {
+          set({ 
+            isAuthenticated: true, 
+            user: response.data, 
+            isLoading: false 
+          });
+        } else {
+          // Token is invalid, clear it
+          console.warn('Invalid token detected:', response.error?.message);
+          clearStoredTokens();
+          set({ 
+            isAuthenticated: false, 
+            user: null, 
+            isLoading: false 
+          });
+        }
+      } catch (error) {
+        console.error('Auth check failed:', error);
+        // On network error, assume token is still valid but mark as not loading
+        set({ 
+          isAuthenticated: true, 
+          isLoading: false 
+        });
+      }
     } else {
       set({ isAuthenticated: false, user: null, isLoading: false });
     }
@@ -166,7 +191,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         set({ user: response.data });
       } else {
         console.error('Failed to fetch user profile:', response.error?.message);
-        // Don't clear authentication, just log the error
+        // Note: 401 responses are handled automatically by handleApiResponse utility
       }
     } catch (error) {
       console.error('Failed to fetch user profile:', error);
@@ -182,6 +207,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         return true;
       } else {
         set({ error: response.error?.message || 'Failed to update coins' });
+        // Note: 401 responses are handled automatically by handleApiResponse utility
         return false;
       }
     } catch (error) {

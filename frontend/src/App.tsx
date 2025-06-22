@@ -2,11 +2,12 @@ import { useEffect } from 'react'
 import Camp from './components/game/Camp'
 import BottomTabBar from './components/ui/BottomTabBar'
 import TopHeader from './components/ui/TopHeader'
+import PersistentCards from './components/ui/PersistentCards'
 import CatsList from './components/game/CatsList'
 import AuthPage from './components/auth/AuthPage'
 import MenuPage from './components/game/MenuPage'
 import AdminPanel from './components/admin/AdminPanel'
-import ExpeditionsPage from './components/game/ExpeditionsPage'
+import ExpeditionsPage from './components/game/expeditions/ExpeditionsPage'
 import { useTabBarStore } from './stores/tabBarStore'
 import { useAuthStore } from './stores/authStore'
 
@@ -17,7 +18,7 @@ function App() {
   // Check auth status on app load
   useEffect(() => {
     checkAuthStatus()
-  }, [])
+  }, [checkAuthStatus])
 
   // Set default tab to camp when user becomes authenticated
   useEffect(() => {
@@ -84,6 +85,9 @@ function App() {
       {showTabBar && activeTab !== 'expeditions' && (
         <BottomTabBar activeTab={activeTab} onTabChange={handleTabChange} />
       )}
+      
+      {/* Persistent Cards - Floating modal showing expedition cards */}
+      <PersistentCards />
     </div>
   )
 }

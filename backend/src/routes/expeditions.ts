@@ -467,10 +467,11 @@ router.post('/', authMiddleware, async (req: AuthenticatedRequest, res: Response
   }
 });
 
-// Complete expedition (draw cards and generate results)
-router.post('/:expeditionId/complete', authMiddleware, async (req: AuthenticatedRequest, res: Response) => {
+// Draw cards for expedition
+router.post('/:expeditionId/draw-cards', authMiddleware, async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { expeditionId } = req.params;
+    const { cardCount } = req.body;
     
     // Get expedition and verify it's active
     const { data: expedition, error: expeditionError } = await supabase
@@ -495,19 +496,30 @@ router.post('/:expeditionId/complete', authMiddleware, async (req: Authenticated
       throw expeditionError;
     }
     
-    // Get expedition cats
-    const { data: expeditionCats, error: catsError } = await supabase
-      .from('expedition_cats')
-      .select('*')
-      .eq('expedition_id', expeditionId)
-      .order('position');
+    // Determine number of cards to draw
+    let numCards = cardCount;
     
-    if (catsError) throw catsError;
+    // If no cardCount provided, use spread configuration
+    if (!numCards) {
+      const spreadConfig = SPREAD_CONFIGS[expedition.spread_type as keyof typeof SPREAD_CONFIGS];
+      numCards = spreadConfig.positions;
+    }
+    
+    // Validate card count
+    if (!numCards || numCards < 1 || numCards > 22) {
+      res.status(400).json({
+        success: false,
+        error: {
+          code: 'INVALID_INPUT',
+          message: 'Card count must be between 1 and 22'
+        }
+      });
+      return;
+    }
     
     // Generate and draw tarot cards
-    const spreadConfig = SPREAD_CONFIGS[expedition.spread_type as keyof typeof SPREAD_CONFIGS];
     const deck = shuffleTarotDeck(generateTarotDeck());
-    const drawnCards = deck.slice(0, spreadConfig.positions);
+    const drawnCards = deck.slice(0, numCards);
     
     // Create expedition cards with random orientations
     const expeditionCardsData = drawnCards.map((card, index) => ({
@@ -534,12 +546,142 @@ router.post('/:expeditionId/complete', authMiddleware, async (req: Authenticated
       status: 'pending' as const
     }));
     
-    const { data: expeditionMinigames, error: minigamesInsertError } = await supabase
+    const { error: minigamesInsertError } = await supabase
       .from('expedition_minigames')
       .insert(expeditionMinigamesData)
       .select();
     
     if (minigamesInsertError) throw minigamesInsertError;
+    
+    // Update expedition status to cards_drawn
+    const { error: updateError } = await supabase
+      .from('expeditions')
+      .update({ status: 'cards_drawn' })
+      .eq('id', expeditionId);
+    
+    if (updateError) throw updateError;
+    
+    const response: ApiResponse<{ cards: ExpeditionCard[] }> = {
+      success: true,
+      data: {
+        cards: expeditionCards || []
+      }
+    };
+    
+    res.json(response);
+  } catch (error) {
+    console.error('Error drawing cards:', error);
+    res.status(500).json({
+      success: false,
+      error: {
+        code: 'SERVER_ERROR',
+        message: 'Failed to draw cards'
+      }
+    });
+  }
+});
+
+// Complete expedition (draw cards and generate results)
+router.post('/:expeditionId/complete', authMiddleware, async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const { expeditionId } = req.params;
+    
+    // Get expedition and verify it's active or cards_drawn
+    const { data: expedition, error: expeditionError } = await supabase
+      .from('expeditions')
+      .select('*')
+      .eq('id', expeditionId)
+      .eq('user_id', req.userId!)
+      .in('status', ['active', 'cards_drawn'])
+      .single();
+    
+    if (expeditionError) {
+      if (expeditionError.code === 'PGRST116') {
+        res.status(404).json({
+          success: false,
+          error: {
+            code: 'NOT_FOUND',
+            message: 'Active expedition not found'
+          }
+        });
+        return;
+      }
+      throw expeditionError;
+    }
+    
+    // Get expedition cats
+    const { data: expeditionCats, error: catsError } = await supabase
+      .from('expedition_cats')
+      .select('*')
+      .eq('expedition_id', expeditionId)
+      .order('position');
+    
+    if (catsError) throw catsError;
+    
+    let expeditionCards;
+    let expeditionMinigames;
+    
+    // Check if cards are already drawn
+    if (expedition.status === 'cards_drawn') {
+      // Cards already drawn, just fetch them
+      const { data: existingCards, error: cardsError } = await supabase
+        .from('expedition_cards')
+        .select('*')
+        .eq('expedition_id', expeditionId)
+        .order('card_position');
+      
+      if (cardsError) throw cardsError;
+      expeditionCards = existingCards;
+      
+      // Fetch existing minigames
+      const { data: existingMinigames, error: minigamesError } = await supabase
+        .from('expedition_minigames')
+        .select('*')
+        .eq('expedition_id', expeditionId)
+        .order('card_position');
+      
+      if (minigamesError) throw minigamesError;
+      expeditionMinigames = existingMinigames;
+    } else {
+      // Generate and draw tarot cards
+      const spreadConfig = SPREAD_CONFIGS[expedition.spread_type as keyof typeof SPREAD_CONFIGS];
+      const deck = shuffleTarotDeck(generateTarotDeck());
+      const drawnCards = deck.slice(0, spreadConfig.positions);
+      
+      // Create expedition cards with random orientations
+      const expeditionCardsData = drawnCards.map((card, index) => ({
+        expedition_id: expeditionId,
+        card_position: index,
+        tarot_card_name: card,
+        orientation: Math.random() < 0.7 ? 'upright' : 'reversed' // 70% chance upright
+      }));
+      
+      const { data: newExpeditionCards, error: cardsInsertError } = await supabase
+        .from('expedition_cards')
+        .insert(expeditionCardsData)
+        .select();
+      
+      if (cardsInsertError) throw cardsInsertError;
+      expeditionCards = newExpeditionCards;
+      
+      // Create expedition minigames for each drawn card
+      const expeditionMinigamesData = expeditionCards!.map(card => ({
+        expedition_id: expeditionId,
+        card_position: card.card_position,
+        tarot_card_name: card.tarot_card_name,
+        orientation: card.orientation,
+        minigame_type: null, // Will be set when minigames are implemented
+        status: 'pending' as const
+      }));
+      
+      const { data: newExpeditionMinigames, error: minigamesInsertError } = await supabase
+        .from('expedition_minigames')
+        .insert(expeditionMinigamesData)
+        .select();
+      
+      if (minigamesInsertError) throw minigamesInsertError;
+      expeditionMinigames = newExpeditionMinigames;
+    }
     
     // Generate rewards for each card
     const cardRewards = expeditionCards!.map(card => 
@@ -643,6 +785,33 @@ router.post('/:expeditionId/complete', authMiddleware, async (req: Authenticated
       
       if (newCatsError) console.error('Error creating new cats:', newCatsError);
     }
+
+    // Clean up expedition data after completion
+    // Delete expedition cards, cats, minigames (results can be kept for history)
+    const cleanupPromises = [
+      supabase
+        .from('expedition_cards')
+        .delete()
+        .eq('expedition_id', expeditionId),
+      supabase
+        .from('expedition_cats')
+        .delete()
+        .eq('expedition_id', expeditionId),
+      supabase
+        .from('expedition_minigames')
+        .delete()
+        .eq('expedition_id', expeditionId)
+    ];
+
+    const cleanupResults = await Promise.allSettled(cleanupPromises);
+    
+    // Log any cleanup errors but don't fail the request
+    cleanupResults.forEach((result, index) => {
+      if (result.status === 'rejected') {
+        const tableNames = ['expedition_cards', 'expedition_cats', 'expedition_minigames'];
+        console.error(`Error cleaning up ${tableNames[index]}:`, result.reason);
+      }
+    });
     
     const response: ApiResponse<CompleteExpeditionResponse> = {
       success: true,

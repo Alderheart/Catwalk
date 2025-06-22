@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, forwardRef, useImperativeHandle } from 'react';
 import Card, { CardData } from './Card';
+import { expeditionConfig } from '../../config/expeditionConfig';
 
 interface CardPosition {
   x: number;
@@ -23,6 +24,7 @@ export interface CardDeckHandle {
   fanOut: () => void;
   collect: () => void;
   streamTo: (targetX: number, targetY: number, onComplete?: () => void) => void;
+  streamToSpread: (centerX: number, centerY: number, spacing: number, onComplete?: () => void) => void;
   reset: () => void;
 }
 
@@ -56,6 +58,7 @@ const CardDeck = forwardRef<CardDeckHandle, CardDeckProps>(({
     fanOut,
     collect,
     streamTo,
+    streamToSpread,
     reset
   }));
 
@@ -264,6 +267,80 @@ const CardDeck = forwardRef<CardDeckHandle, CardDeckProps>(({
   };
 
   /**
+   * Stream cards from deck to spread formation
+   */
+  const streamToSpread = (centerX: number, centerY: number, spacing: number, onComplete?: () => void) => {
+    if (isShuffling) return;
+    
+    setIsShuffling(true);
+    animationTimeouts.current = [];
+
+    const cardsToStream = cards.slice(0, 3); // 3 cards for spread
+    const remainingCards = cards.slice(3);
+    
+    console.log('Total cards:', cards.length, 'Cards to stream:', cardsToStream.length, 'Remaining cards:', remainingCards.length); // Debug
+    
+    // Step 1: Draw out three cards from deck (200ms stagger)
+    cardsToStream.forEach((card, index) => {
+      const delay = index * 200; // 200ms between cards
+      
+      const timeout = setTimeout(() => {
+        setCardPositions(prev => {
+          // Calculate final position for each card in spread
+          const offset = (index - (cardsToStream.length - 1) / 2) * spacing;
+          const finalX = centerX + offset;
+          const finalY = centerY - 120; // Move cards up above the deck like dealing
+          
+          return {
+            ...prev,
+            [card.id]: {
+              x: finalX,
+              y: finalY,
+              rotation: 0,
+              scale: 1, // Keep same scale as deck
+              opacity: 1,
+              animationDuration: 600
+            }
+          };
+        });
+      }, delay);
+      
+      animationTimeouts.current.push(timeout);
+    });
+
+    // Step 2: Fade out entire remaining deck after last card is drawn (1000ms delay)
+    const fadeTimeout = setTimeout(() => {
+      console.log('Starting deck fade animation for', remainingCards.length, 'cards'); // Debug
+      // Fade all remaining cards in the deck
+      const newPositions: Record<string, CardPosition> = {};
+      remainingCards.forEach((card) => {
+        console.log('Fading card:', card.id); // Debug
+        newPositions[card.id] = {
+          ...cardPositions[card.id],
+          opacity: 0,
+          animationDuration: 1500 // Much slower, more visible fade
+        };
+      });
+      
+      // Apply all fade changes at once
+      setCardPositions(prev => ({
+        ...prev,
+        ...newPositions
+      }));
+    }, 800); // Start fade sooner, after cards are drawn
+    animationTimeouts.current.push(fadeTimeout);
+
+    // Call completion callback after deck fades
+    const totalAnimationTime = 800 + 1500; // Cards drawn + fade duration
+    const completionTimeout = setTimeout(() => {
+      setIsShuffling(false);
+      onComplete?.();
+    }, totalAnimationTime);
+    
+    animationTimeouts.current.push(completionTimeout);
+  };
+
+  /**
    * Helper to animate to new positions
    */
   const animateToPositions = (newPositions: Record<string, CardPosition>) => {
@@ -280,6 +357,8 @@ const CardDeck = forwardRef<CardDeckHandle, CardDeckProps>(({
             key={card.id}
             x={position.x}
             y={position.y}
+            width={expeditionConfig.cards.center.width}
+            height={expeditionConfig.cards.center.height}
             rotation={position.rotation}
             scale={position.scale}
             opacity={position.opacity}

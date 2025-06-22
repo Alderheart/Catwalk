@@ -7,6 +7,7 @@ export interface CardData {
   value: string;
   suit?: string;
   faceUp?: boolean;
+  orientation?: 'upright' | 'reversed';
 }
 
 interface CardProps {
@@ -20,6 +21,8 @@ interface CardProps {
   opacity?: number;
   cornerRadius?: number;
   animationDuration?: number;
+  isFlipping?: boolean;
+  onFlipComplete?: () => void;
 }
 
 /**
@@ -36,10 +39,13 @@ const Card: React.FC<CardProps> = ({
   scale = 1,
   opacity = 1,
   cornerRadius = 8,
-  animationDuration = 800
+  animationDuration = 800,
+  isFlipping = false,
+  onFlipComplete
 }) => {
   const groupRef = useRef<Konva.Group>(null);
   const isFirstRender = useRef(true);
+  const [localFaceUp, setLocalFaceUp] = React.useState(data.faceUp || false);
 
   // Animate to new position when props change
   useEffect(() => {
@@ -80,10 +86,57 @@ const Card: React.FC<CardProps> = ({
     };
   }, [x, y, rotation, scale, opacity, animationDuration]);
 
+  // Handle flip animation
+  useEffect(() => {
+    if (isFlipping && groupRef.current) {
+      const group = groupRef.current;
+      
+      // First half of flip - scale down to 0
+      const flipOut = new Konva.Tween({
+        node: group,
+        duration: 0.3,
+        scaleX: 0,
+        easing: Konva.Easings.EaseInOut,
+        onFinish: () => {
+          // Change face at midpoint
+          setLocalFaceUp(!localFaceUp);
+          
+          // Second half of flip - scale back to normal
+          const flipIn = new Konva.Tween({
+            node: group,
+            duration: 0.3,
+            scaleX: scale,
+            easing: Konva.Easings.EaseInOut,
+            onFinish: () => {
+              onFlipComplete?.();
+            }
+          });
+          flipIn.play();
+        }
+      });
+      
+      flipOut.play();
+    }
+  }, [isFlipping]);
+
+  // Update local face up state when data changes
+  useEffect(() => {
+    setLocalFaceUp(data.faceUp || false);
+  }, [data.faceUp]);
+
   // Card colors
-  const cardBg = data.faceUp ? '#ffffff' : '#2D4A5D';
+  const cardBg = localFaceUp ? '#ffffff' : '#2D4A5D';
   const cardBorder = '#1a1a1a';
-  const textColor = data.faceUp ? '#000000' : '#ffffff';
+  const textColor = localFaceUp ? '#000000' : '#ffffff';
+  
+  // Check if this is a tarot card
+  const isTarotCard = data.value && [
+    'The Fool', 'The Magician', 'The High Priestess', 'The Empress', 'The Emperor',
+    'The Hierophant', 'The Lovers', 'The Chariot', 'Strength', 'The Hermit',
+    'Wheel of Fortune', 'Justice', 'The Hanged Man', 'Death', 'Temperance',
+    'The Devil', 'The Tower', 'The Star', 'The Moon', 'The Sun',
+    'Judgement', 'The World'
+  ].includes(data.value);
 
   return (
     <Group
@@ -106,30 +159,110 @@ const Card: React.FC<CardProps> = ({
       />
       
       {/* Card content */}
-      {data.faceUp ? (
+      {localFaceUp ? (
         <>
-          {/* Face up - show value */}
-          <Text
-            x={10}
-            y={10}
-            text={data.value}
-            fontSize={16}
-            fontFamily="Arial"
-            fill={textColor}
-            fontStyle="bold"
-          />
-          {data.suit && (
-            <Text
-              x={width / 2}
-              y={height / 2}
-              text={data.suit}
-              fontSize={24}
-              fontFamily="Arial"
-              fill={textColor}
-              offsetX={12}
-              offsetY={12}
-              align="center"
-            />
+          {isTarotCard ? (
+            <>
+              {/* Tarot card face up */}
+              <Rect
+                x={2}
+                y={2}
+                width={width - 4}
+                height={height - 4}
+                fill="#4a1d8a"
+                stroke="#FFD700"
+                strokeWidth={1}
+                cornerRadius={cornerRadius - 1}
+              />
+              <Text
+                x={width / 2}
+                y={15}
+                text={data.value || 'Tarot Card'}
+                fontSize={Math.min(9, width * 0.12)}
+                fontFamily="Arial"
+                fill="#FFD700"
+                fontStyle="bold"
+                align="center"
+                offsetX={(width / 2) - 10}
+                wrap="word"
+                width={width - 20}
+              />
+              {data.orientation && (
+                <Text
+                  x={width / 2}
+                  y={height - 15}
+                  text={data.orientation === 'upright' ? '↑' : '↓'}
+                  fontSize={Math.min(16, width * 0.25)}
+                  fontFamily="Arial"
+                  fill={data.orientation === 'upright' ? '#90EE90' : '#FFB6C1'}
+                  offsetX={8}
+                  align="center"
+                />
+              )}
+              <Text
+                x={width / 2}
+                y={height / 2}
+                text="✦"
+                fontSize={Math.min(20, width * 0.3)}
+                fontFamily="Arial"
+                fill="#FFD700"
+                offsetX={10}
+                offsetY={10}
+                align="center"
+                opacity={0.3}
+              />
+            </>
+          ) : (
+            <>
+              {/* Regular playing card or expedition card face up */}
+              <Rect
+                x={2}
+                y={2}
+                width={width - 4}
+                height={height - 4}
+                fill="#4a1d8a"
+                stroke="#FFD700"
+                strokeWidth={1}
+                cornerRadius={cornerRadius - 1}
+              />
+              <Text
+                x={width / 2}
+                y={15}
+                text={data.value || 'Card'}
+                fontSize={Math.min(9, width * 0.12)}
+                fontFamily="Arial"
+                fill="#FFD700"
+                fontStyle="bold"
+                align="center"
+                offsetX={(width / 2) - 10}
+                wrap="word"
+                width={width - 20}
+              />
+              {data.orientation && (
+                <Text
+                  x={width / 2}
+                  y={height - 15}
+                  text={data.orientation === 'upright' ? '↑' : '↓'}
+                  fontSize={Math.min(16, width * 0.25)}
+                  fontFamily="Arial"
+                  fill={data.orientation === 'upright' ? '#90EE90' : '#FFB6C1'}
+                  offsetX={8}
+                  align="center"
+                />
+              )}
+              <Text
+                x={width / 2}
+                y={height / 2}
+                text="✦"
+                fontSize={Math.min(20, width * 0.3)}
+                fontFamily="Arial"
+                fill="#FFD700"
+                offsetX={10}
+                offsetY={10}
+                align="center"
+                opacity={0.3}
+              />
+            </>
           )}
         </>
       ) : (

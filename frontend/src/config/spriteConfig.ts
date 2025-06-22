@@ -5,15 +5,15 @@ export const spriteConfig = {
   /** Default sprite dimensions */
   sizes: {
     /** Default cat sprite size in pixels */
-    default: 128,
+    default: 90,
     /** Small sprite size for reduced UI */
-    small: 64,
+    small: 45,
     /** Medium sprite size */
-    medium: 96,
+    medium: 67,
     /** Large sprite size for emphasis */
-    large: 160,
+    large: 112,
     /** Extra large for special displays */
-    xlarge: 256,
+    xlarge: 179,
   },
 
   // Sprite rendering settings
@@ -74,11 +74,11 @@ export const getSpriteUrl = (filename: string): string => {
  */
 export const getSizeClass = (size: number): string => {
   const sizeMap: Record<number, string> = {
-    64: 'w-16 h-16',
-    96: 'w-24 h-24',
-    128: 'w-32 h-32',
-    160: 'w-40 h-40',
-    256: 'w-64 h-64',
+    45: 'w-11 h-11',
+    67: 'w-17 h-17',
+    90: 'w-23 h-23',
+    112: 'w-28 h-28',
+    179: 'w-45 h-45',
   };
   
   return sizeMap[size] || `w-[${size}px] h-[${size}px]`;

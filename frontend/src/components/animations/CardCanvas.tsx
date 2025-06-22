@@ -42,7 +42,8 @@ const CardCanvas: React.FC<React.PropsWithChildren<CardCanvasProps>> = ({
 
   // Global Konva configuration for better performance
   useEffect(() => {
-    Konva.pixelRatio = 1; // Disable pixel ratio scaling for performance
+    // Note: Keeping pixelRatio at default for better visual quality
+    // Konva.pixelRatio = 1; // Disable pixel ratio scaling for performance
   }, []);
 
   return (

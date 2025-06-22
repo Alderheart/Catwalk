@@ -22,7 +22,9 @@
       "Bash(ss:*)",
       "Bash(rg:*)",
       "Bash(mv:*)",
-      "Bash(grep:*)"
+      "Bash(grep:*)",
+      "Bash(find:*)",
+      "Bash(npm run typecheck:*)"
     ],
     "deny": []
   }

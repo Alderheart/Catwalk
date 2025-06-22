@@ -3,7 +3,9 @@ import {
   expeditionsService, 
   Expedition, 
   CompleteExpeditionData, 
-  CreateExpeditionRequest 
+  CreateExpeditionRequest,
+  DrawCardsRequest,
+  ExpeditionCard
 } from '../services/expeditionsService';
 
 interface ExpeditionsState {
@@ -16,7 +18,8 @@ interface ExpeditionsState {
   // Actions
   fetchExpeditions: (force?: boolean) => Promise<void>;
   fetchCurrentExpedition: () => Promise<void>;
-  createExpedition: (data: CreateExpeditionRequest) => Promise<boolean>;
+  createExpedition: (data: CreateExpeditionRequest) => Promise<CompleteExpeditionData | null>;
+  drawCards: (expeditionId: string, data?: DrawCardsRequest) => Promise<ExpeditionCard[] | null>;
   completeExpedition: (expeditionId: string) => Promise<CompleteExpeditionData | null>;
   clearError: () => void;
   clearCurrentExpedition: () => void;
@@ -73,10 +76,19 @@ export const useExpeditionsStore = create<ExpeditionsState>((set, get) => ({
       await get().fetchExpeditions();
     }
     
-    // Look for active or cards_drawn expedition
-    const activeExpedition = get().expeditions.find(exp => exp.status === 'active' || exp.status === 'cards_drawn');
+    // Look for active or cards_drawn expedition first
+    let targetExpedition = get().expeditions.find(exp => exp.status === 'active' || exp.status === 'cards_drawn');
     
-    if (!activeExpedition) {
+    // If no active expedition, get the most recent completed one (for results display)
+    if (!targetExpedition) {
+      const completedExpeditions = get().expeditions
+        .filter(exp => exp.status === 'completed')
+        .sort((a, b) => new Date(b.completedAt || b.createdAt).getTime() - new Date(a.completedAt || a.createdAt).getTime());
+      
+      targetExpedition = completedExpeditions[0];
+    }
+    
+    if (!targetExpedition) {
       set({ currentExpedition: null });
       return;
     }
@@ -84,7 +96,7 @@ export const useExpeditionsStore = create<ExpeditionsState>((set, get) => ({
     set({ isLoading: true, error: null });
     
     try {
-      const response = await expeditionsService.getExpedition(activeExpedition.id);
+      const response = await expeditionsService.getExpedition(targetExpedition.id);
       
       if (response.success && response.data) {
         set({
@@ -122,20 +134,71 @@ export const useExpeditionsStore = create<ExpeditionsState>((set, get) => ({
           error: null,
           lastFetch: Date.now(),
         });
-        return true;
+        return response.data;
       } else {
         set({
           isLoading: false,
           error: response.error?.message || 'Failed to create expedition',
         });
-        return false;
+        return null;
       }
     } catch (error) {
       set({
         isLoading: false,
         error: 'An unexpected error occurred',
       });
-      return false;
+      return null;
+    }
+  },
+
+  drawCards: async (expeditionId: string, data?: DrawCardsRequest) => {
+    set({ isLoading: true, error: null });
+    
+    try {
+      const response = await expeditionsService.drawCards(expeditionId, data);
+      
+      if (response.success && response.data) {
+        // Update expedition status in list
+        const currentExpeditions = get().expeditions;
+        const updatedExpeditions = currentExpeditions.map(exp => 
+          exp.id === expeditionId ? { ...exp, status: 'cards_drawn' as const } : exp
+        );
+        
+        // Update current expedition with drawn cards
+        const currentExp = get().currentExpedition;
+        if (currentExp && currentExp.expedition.id === expeditionId) {
+          set({
+            expeditions: updatedExpeditions,
+            currentExpedition: {
+              ...currentExp,
+              expedition: { ...currentExp.expedition, status: 'cards_drawn' as const },
+              cards: response.data.cards
+            },
+            isLoading: false,
+            error: null,
+          });
+        } else {
+          set({
+            expeditions: updatedExpeditions,
+            isLoading: false,
+            error: null,
+          });
+        }
+        
+        return response.data.cards;
+      } else {
+        set({
+          isLoading: false,
+          error: response.error?.message || 'Failed to draw cards',
+        });
+        return null;
+      }
+    } catch (error) {
+      set({
+        isLoading: false,
+        error: 'An unexpected error occurred',
+      });
+      return null;
     }
   },
 
@@ -152,6 +215,9 @@ export const useExpeditionsStore = create<ExpeditionsState>((set, get) => ({
           exp.id === expeditionId ? response.data!.expedition : exp
         );
         
+        // Note: After completion, the backend cleans up cards, cats, and minigames
+        // The response.data will contain results but empty arrays for cards/cats/minigames
+        // This is expected behavior - we keep the expedition and results for history
         set({
           expeditions: updatedExpeditions,
           currentExpedition: response.data,

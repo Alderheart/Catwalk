@@ -109,6 +109,21 @@ export interface ExpeditionResponse {
   };
 }
 
+export interface DrawCardsRequest {
+  cardCount?: number; // Optional - defaults to spread type count
+}
+
+export interface DrawCardsResponse {
+  success: boolean;
+  data?: {
+    cards: ExpeditionCard[];
+  };
+  error?: {
+    code: string;
+    message: string;
+  };
+}
+
 class ExpeditionsService {
   private getAuthHeaders() {
     const token = getAuthToken();
@@ -160,6 +175,26 @@ class ExpeditionsService {
         method: 'POST',
         headers: this.getAuthHeaders(),
         body: JSON.stringify(data),
+      });
+
+      return await response.json();
+    } catch (error) {
+      return {
+        success: false,
+        error: {
+          code: 'NETWORK_ERROR',
+          message: 'Failed to connect to server',
+        },
+      };
+    }
+  }
+
+  async drawCards(expeditionId: string, data?: DrawCardsRequest): Promise<DrawCardsResponse> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/expeditions/${expeditionId}/draw-cards`, {
+        method: 'POST',
+        headers: this.getAuthHeaders(),
+        body: JSON.stringify(data || {}),
       });
 
       return await response.json();
