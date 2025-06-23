@@ -2,6 +2,7 @@ import React from 'react';
 import type { Cat } from '../../../types/Cat';
 import { getCatSpriteUrl } from '../../../utils/catSprites';
 import { spriteConfig } from '../../../config/spriteConfig';
+import CatSpriteBox from '../../ui/CatSpriteBox';
 
 interface CatSelectorProps {
   selectedCats: (Cat | null)[];
@@ -38,44 +39,32 @@ const CatSelector: React.FC<CatSelectorProps> = ({
       <div className="flex items-center justify-center gap-3">
         {/* Cat Selection Slots */}
         {selectedCats.map((selectedCat, index) => (
-          <div
+          <CatSpriteBox
             key={index}
+            cat={selectedCat}
+            size="medium"
             onClick={() => onCatSlotClick(index)}
-            className={`relative w-20 h-20 border-2 rounded-lg flex items-center justify-center hover:border-gray-400 transition-colors cursor-pointer ${
-              selectedCat 
-                ? 'bg-blue-700/30 border-blue-400 border-solid' 
-                : 'bg-gray-700/50 border-gray-500 border-dashed'
-            }`}
-          >
-            {selectedCat ? (
-              <div className="relative w-full h-full flex items-center justify-center">
-                <img 
-                  src={getCatSpriteUrl(selectedCat)}
-                  alt={selectedCat.name}
-                  className="w-16 h-16"
-                  style={{ 
-                    imageRendering: spriteConfig.rendering.imageRendering,
-                    objectFit: spriteConfig.rendering.objectFit as React.CSSProperties['objectFit']
-                  }}
-                />
-                {/* Remove button */}
+            actionButton={
+              selectedCat ? (
                 <button
                   onClick={(e) => {
-                    e.preventDefault();
+                    e.stopPropagation();
                     onRemoveCat(index);
                   }}
-                  className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 hover:bg-red-600 rounded-full flex items-center justify-center text-white text-xs"
+                  className="w-4 h-4 bg-red-500 hover:bg-red-600 rounded-full flex items-center justify-center text-white text-xs"
                 >
                   ×
                 </button>
-              </div>
-            ) : (
+              ) : undefined
+            }
+            emptyContent={
               <div className="text-gray-400 text-xs text-center">
                 <div className="text-lg mb-1">🐱</div>
                 <div>Cat {index + 1}</div>
               </div>
-            )}
-          </div>
+            }
+            variant={selectedCat ? 'selected' : 'dashed'}
+          />
         ))}
       </div>
 
@@ -104,7 +93,7 @@ const CatSelector: React.FC<CatSelectorProps> = ({
                       }}
                     />
                     <span className="font-medium">{cat.name}</span>
-                    <span className="text-gray-400">({cat.moons} moons, {cat.skill})</span>
+                    <span className="text-gray-400">(Level {cat.level}, {cat.skill})</span>
                   </button>
                 ))}
               </div>

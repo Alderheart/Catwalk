@@ -1,15 +1,45 @@
 import { useAuthStore } from '../../stores/authStore';
 import { useTabBarStore } from '../../stores/tabBarStore';
 import { useState } from 'react';
+import HermitUprightMinigame from '../minigames/tarot/the-hermit/UprightMinigame';
+import SpinnerWheelTester from '../shared/SpinnerWheelTester';
 
 export default function MenuPage() {
   const { user, signout } = useAuthStore();
-  const { setActiveTab } = useTabBarStore();
+  const { setActiveTab, hideForMinigame, showAfterMinigame } = useTabBarStore();
   const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const [showMinigameTest, setShowMinigameTest] = useState(false);
+  const [showSpinnerTester, setShowSpinnerTester] = useState(false);
 
   const handleLogout = async () => {
     await signout();
     setShowLogoutModal(false);
+  };
+
+  const handleMinigameStart = () => {
+    hideForMinigame();
+    setShowMinigameTest(true);
+  };
+
+  const handleMinigameComplete = (score: number, minigameType: string) => {
+    console.log(`Minigame completed! Score: ${score}, Type: ${minigameType}`);
+    setShowMinigameTest(false);
+    showAfterMinigame();
+  };
+
+  const handleMinigameClose = () => {
+    setShowMinigameTest(false);
+    showAfterMinigame();
+  };
+
+  const handleSpinnerTesterStart = () => {
+    hideForMinigame();
+    setShowSpinnerTester(true);
+  };
+
+  const handleSpinnerTesterClose = () => {
+    setShowSpinnerTester(false);
+    showAfterMinigame();
   };
 
   return (
@@ -34,6 +64,18 @@ export default function MenuPage() {
         
         {/* Menu Options */}
         <div className="space-y-3">
+          {/* Cats List */}
+          <button 
+            onClick={() => setActiveTab('cats')}
+            className="w-full bg-blue-800 hover:bg-blue-700 text-white p-4 rounded-lg text-left transition-colors duration-200"
+          >
+            <div className="flex items-center justify-between">
+              <span className="font-medium">Cats List</span>
+              <span className="text-gray-400">→</span>
+            </div>
+            <p className="text-sm text-gray-400 mt-1">View and manage all your cats</p>
+          </button>
+
           {/* Admin Panel */}
           <button 
             onClick={() => setActiveTab('admin')}
@@ -44,6 +86,30 @@ export default function MenuPage() {
               <span className="text-gray-400">→</span>
             </div>
             <p className="text-sm text-gray-400 mt-1">Edit and manage game state</p>
+          </button>
+
+          {/* Test Minigame */}
+          <button 
+            onClick={handleMinigameStart}
+            className="w-full bg-amber-800 hover:bg-amber-700 text-white p-4 rounded-lg text-left transition-colors duration-200"
+          >
+            <div className="flex items-center justify-between">
+              <span className="font-medium">Test Hermit Minigame</span>
+              <span className="text-gray-400">→</span>
+            </div>
+            <p className="text-sm text-gray-400 mt-1">Test the prey hunting minigame</p>
+          </button>
+
+          {/* Spinner Wheel Tester */}
+          <button 
+            onClick={handleSpinnerTesterStart}
+            className="w-full bg-emerald-800 hover:bg-emerald-700 text-white p-4 rounded-lg text-left transition-colors duration-200"
+          >
+            <div className="flex items-center justify-between">
+              <span className="font-medium">Spinner Wheel Tester</span>
+              <span className="text-gray-400">→</span>
+            </div>
+            <p className="text-sm text-gray-400 mt-1">Test spinner wheel with adjustable probabilities</p>
           </button>
 
 
@@ -119,6 +185,50 @@ export default function MenuPage() {
                 </button>
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Minigame Test Fullscreen */}
+      {showMinigameTest && (
+        <div className="fixed inset-0 z-50 bg-gray-900">
+          {/* Close button */}
+          <button
+            onClick={handleMinigameClose}
+            className="absolute top-4 right-4 z-10 bg-black/50 hover:bg-black/70 text-white rounded-full p-2 transition-colors"
+          >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+          
+          {/* Minigame */}
+          <div className="w-full h-full">
+            <HermitUprightMinigame
+              cardName="The Hermit"
+              orientation="upright"
+              onComplete={handleMinigameComplete}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Spinner Wheel Tester Fullscreen */}
+      {showSpinnerTester && (
+        <div className="fixed inset-0 z-50 bg-gray-900">
+          {/* Close button */}
+          <button
+            onClick={handleSpinnerTesterClose}
+            className="absolute top-4 right-4 z-10 bg-black/50 hover:bg-black/70 text-white rounded-full p-2 transition-colors"
+          >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+          
+          {/* Spinner Tester */}
+          <div className="w-full h-full">
+            <SpinnerWheelTester />
           </div>
         </div>
       )}

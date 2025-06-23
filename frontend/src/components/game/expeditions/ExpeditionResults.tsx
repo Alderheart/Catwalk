@@ -6,8 +6,7 @@ interface ExpeditionResultsProps {
   currentExpedition: CompleteExpeditionData | null;
   cats: Cat[];
   showResults: boolean;
-  onNewExpedition: () => void;
-  onBackToCamp: () => void;
+  onClose: () => void;
 }
 
 /**
@@ -17,8 +16,7 @@ const ExpeditionResults: React.FC<ExpeditionResultsProps> = ({
   currentExpedition,
   cats,
   showResults,
-  onNewExpedition,
-  onBackToCamp
+  onClose
 }) => {
   if (!currentExpedition?.expedition || !currentExpedition?.results || 
       currentExpedition.expedition.status !== 'completed' || !showResults) {
@@ -101,18 +99,12 @@ const ExpeditionResults: React.FC<ExpeditionResultsProps> = ({
           </div>
         </div>
         
-        <div className="flex items-center justify-center gap-3">
+        <div className="flex items-center justify-center">
           <button
-            onClick={onNewExpedition}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors"
+            onClick={onClose}
+            className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg text-sm font-semibold transition-colors"
           >
-            New Expedition
-          </button>
-          <button
-            onClick={onBackToCamp}
-            className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors"
-          >
-            Back to Camp
+            Close
           </button>
         </div>
       </div>

@@ -1,17 +1,15 @@
 import React, { useRef, useEffect } from 'react';
 import CardCanvas from '../../animations/CardCanvas';
 import CardDeck, { CardDeckHandle } from '../../animations/CardDeck';
-import Card, { CardData } from '../../animations/Card';
-import { Group } from 'react-konva';
+import { CardData } from '../../animations/Card';
 import { useCatsStore } from '../../../stores/catsStore';
 import { useExpeditionsStore } from '../../../stores/expeditionsStore';
-import { useTabBarStore } from '../../../stores/tabBarStore';
 import { expeditionConfig } from '../../../config/expeditionConfig';
+import CatSpriteBox from '../../ui/CatSpriteBox';
 
 // Extracted components
 import ExpeditionResults from './ExpeditionResults';
 import ExpeditionSetup from './ExpeditionSetup';
-import CardFlipControls from './CardFlipControls';
 import ErrorDisplay from '../../shared/ErrorDisplay';
 import LoadingDisplay from '../../shared/LoadingDisplay';
 
@@ -19,11 +17,15 @@ import LoadingDisplay from '../../shared/LoadingDisplay';
 import { useExpeditionFlow } from '../../../hooks/useExpeditionFlow';
 import { useExpeditionSetup } from '../../../hooks/useExpeditionSetup';
 
+interface ExpeditionsPageProps {
+  onEnterExpedition: (expeditionId: string) => void;
+}
+
 /**
  * Expeditions page with card spread selection
  * Full page experience with no bottom nav bar
  */
-const ExpeditionsPage: React.FC = () => {
+const ExpeditionsPage: React.FC<ExpeditionsPageProps> = ({ onEnterExpedition }) => {
   const deckRef = useRef<CardDeckHandle>(null);
   const canvasRef = useRef<HTMLDivElement>(null);
 
@@ -35,16 +37,17 @@ const ExpeditionsPage: React.FC = () => {
   const { cats, fetchCats } = useCatsStore();
   const { 
     currentExpedition, 
+    lastCompletedExpedition,
     createExpedition,
     drawCards, 
-    completeExpedition, 
     fetchCurrentExpedition,
+    fetchLastCompletedExpedition,
     clearCurrentExpedition,
+    completeExpedition,
     isLoading: expeditionsLoading,
     error: expeditionsError,
     clearError
   } = useExpeditionsStore();
-  const { setActiveTab } = useTabBarStore();
 
   // Get current canvas dimensions
   const getCanvasDimensions = () => {
@@ -120,19 +123,21 @@ const ExpeditionsPage: React.FC = () => {
   useEffect(() => {
     fetchCats();
     fetchCurrentExpedition();
-  }, [fetchCats, fetchCurrentExpedition]);
+    fetchLastCompletedExpedition();
+  }, [fetchCats, fetchCurrentExpedition, fetchLastCompletedExpedition]);
+
+  // Check expedition state to determine what to show
+  const hasActiveExpedition = currentExpedition && 
+    currentExpedition.expedition &&
+    (currentExpedition.expedition.status === 'active' || currentExpedition.expedition.status === 'cards_drawn');
 
   // Clear errors on mount
   useEffect(() => {
     clearError();
   }, [clearError]);
 
-  // Auto-show results when expedition is completed
-  useEffect(() => {
-    if (currentExpedition && currentExpedition.expedition && currentExpedition.expedition.status === 'completed' && currentExpedition.results) {
-      expeditionFlow.setShowResults(true);
-    }
-  }, [currentExpedition]);
+  // Results are shown only when explicitly triggered by completion handler
+  // No auto-show on page revisits
 
   // Handle expedition creation
   const handleBeginExpedition = async () => {
@@ -148,247 +153,248 @@ const ExpeditionsPage: React.FC = () => {
     });
     
     if (expedition) {
+      // Draw cards immediately for the new expedition
       const cards = await drawCards(expedition.expedition.id);
       
       if (cards) {
+        // Reset setup state and navigate to expedition screen with cards ready
         expeditionSetup.resetSetupState();
-        expeditionFlow.setShowSpreadMenu(false);
-        expeditionFlow.setDrawnCards(cards);
-        expeditionFlow.setCardsStreaming(true);
-        expeditionFlow.setDeckFading(true);
-        
-        const dimensions = getCanvasDimensions();
-        const centerX = dimensions.width * 0.5;
-        const centerY = dimensions.height * 0.4;
-        
-        const calculateUnifiedSpacing = () => {
-          const screenWidth = dimensions.width;
-          const { base, minSpacing, maxSpacing, breakpoint } = expeditionConfig.spacing;
-          const baseSpacing = screenWidth > breakpoint ? maxSpacing : base;
-          const cardWidth = expeditionConfig.cards.center.width;
-          const totalCardsWidth = 3 * cardWidth;
-          const availableSpace = screenWidth * 0.8;
-          const maxPossibleSpacing = (availableSpace - totalCardsWidth) / Math.max(1, 3 - 1);
-          return Math.max(minSpacing, Math.min(baseSpacing, maxPossibleSpacing));
-        };
-        
-        const cardSpacing = calculateUnifiedSpacing();
-        
-        deckRef.current?.streamToSpread(centerX, centerY, cardSpacing, () => {
-          expeditionFlow.setCardsStreaming(false);
-          expeditionFlow.setDeckFading(false);
-          setTimeout(() => {
-            expeditionFlow.setCardsMovingToTop(true);
-            setTimeout(() => {
-              expeditionFlow.setCardsMovingToTop(false);
-            }, expeditionConfig.animation.positionTransition);
-          }, 500);
-        });
+        expeditionFlow.resetExpeditionFlow();
+        onEnterExpedition(expedition.expedition.id);
       }
     }
     
     expeditionFlow.setIsCreatingExpedition(false);
   };
 
-  // Handle expedition completion
-  const handleCompleteExpedition = async () => {
-    if (!currentExpedition || !currentExpedition.expedition) return;
-    if (currentExpedition.expedition.status !== 'active' && currentExpedition.expedition.status !== 'cards_drawn') return;
+  // Handle continuing an active expedition
+  const handleContinueExpedition = async () => {
+    if (!hasActiveExpedition) return;
     
-    const result = await completeExpedition(currentExpedition.expedition.id);
-    if (result) {
-      expeditionFlow.setShowResults(true);
-    }
-  };
-
-  // Flip the next card in sequence
-  const flipNextCard = () => {
-    if (expeditionFlow.flippingCardIndex < expeditionFlow.drawnCards.length) {
-      const newFlippingIndex = expeditionFlow.flippingCardIndex + 1;
-      expeditionFlow.setFlippingCardIndex(newFlippingIndex);
-      
-      if (newFlippingIndex >= expeditionFlow.drawnCards.length) {
-        expeditionFlow.setAllCardsFlipped(true);
-        setTimeout(() => {
-          if (currentExpedition && currentExpedition.expedition && currentExpedition.expedition.status === 'cards_drawn') {
-            handleCompleteExpedition();
-          }
-        }, 1000);
+    // If expedition is active but no cards drawn yet, draw them first
+    if (currentExpedition.expedition.status === 'active' && (!currentExpedition.cards || currentExpedition.cards.length === 0)) {
+      const cards = await drawCards(currentExpedition.expedition.id);
+      if (cards) {
+        onEnterExpedition(currentExpedition.expedition.id);
       }
+    } else if (currentExpedition.expedition.status === 'cards_drawn') {
+      // Cards are ready, go to minigame screen
+      onEnterExpedition(currentExpedition.expedition.id);
     }
   };
 
-  // Handle new expedition
-  const handleNewExpedition = () => {
-    clearCurrentExpedition();
+  // Handle ending expedition early
+  const handleEndExpedition = async () => {
+    if (!currentExpedition) return;
+    
+    await completeExpedition(currentExpedition.expedition.id);
+    
+    // Reset flow and setup state
     expeditionFlow.resetExpeditionFlow();
     expeditionSetup.resetSetupState();
-    expeditionFlow.setShowSpreadMenu(false);
     
     const dimensions = getCanvasDimensions();
     expeditionFlow.setDeckPosition({
       x: dimensions.width * 0.5,
       y: dimensions.height + 100
     });
+    
+    // Auto-show setup menu after ending expedition
+    setTimeout(() => {
+      if (deckRef.current) {
+        deckRef.current.streamTo(dimensions.width * 0.5, dimensions.height * 0.6, () => {
+          expeditionFlow.setHasStreamedIn(true);
+          expeditionFlow.setShowSpreadMenu(true);
+        });
+      }
+    }, 500);
   };
 
-  // Handle back navigation
-  const handleBack = () => {
-    setActiveTab('camp');
+  // Handle results close - clear expedition and show setup menu
+  const handleResultsClose = () => {
+    clearCurrentExpedition();
+    expeditionFlow.resetExpeditionFlow();
+    expeditionSetup.resetSetupState();
+    
+    const dimensions = getCanvasDimensions();
+    expeditionFlow.setDeckPosition({
+      x: dimensions.width * 0.5,
+      y: dimensions.height + 100
+    });
+    
+    // Auto-show setup menu after closing results
+    setTimeout(() => {
+      if (deckRef.current) {
+        deckRef.current.streamTo(dimensions.width * 0.5, dimensions.height * 0.6, () => {
+          expeditionFlow.setHasStreamedIn(true);
+          expeditionFlow.setShowSpreadMenu(true);
+        });
+      }
+    }, 500);
   };
+
 
   const expeditionCards = getExpeditionCards();
 
+  // Get expedition cats if there's an active expedition
+  const getExpeditionCats = () => {
+    if (!hasActiveExpedition || !currentExpedition?.cats || !cats.length) {
+      return [];
+    }
+    
+    // Create array of cats in their proper positions (0, 1, 2)
+    const positionedCats = new Array(3).fill(null);
+    
+    currentExpedition.cats.forEach(expCat => {
+      // Try different possible field names for cat ID
+      const catId = expCat.catId || expCat.cat_id || expCat.id;
+      const position = expCat.position !== undefined ? expCat.position : expCat.pos;
+      
+      const foundCat = cats.find(cat => cat.id === catId);
+      if (foundCat && position >= 0 && position < 3) {
+        positionedCats[position] = foundCat;
+      }
+    });
+    
+    return positionedCats;
+  };
+
+  const expeditionCats = getExpeditionCats();
+
   return (
-    <div className="relative w-full h-full bg-gradient-to-b from-purple-900/20 to-purple-950/40">
-      {/* Back button */}
-      <button
-        onClick={handleBack}
-        className="absolute top-4 left-4 z-10 bg-black/50 hover:bg-black/70 text-white px-4 py-2 rounded-lg transition-colors flex items-center gap-2 text-sm backdrop-blur-sm"
-      >
-        <span>←</span>
-        Back to Camp
-      </button>
-
-      {/* Card Flip Controls */}
-      <CardFlipControls
-        drawnCards={expeditionFlow.drawnCards}
-        flippingCardIndex={expeditionFlow.flippingCardIndex}
-        cardsStreaming={expeditionFlow.cardsStreaming}
-        deckFading={expeditionFlow.deckFading}
-        cardsMovingToTop={expeditionFlow.cardsMovingToTop}
-        zoomingToFirstCard={expeditionFlow.zoomingToFirstCard}
-        allCardsFlipped={expeditionFlow.allCardsFlipped}
-        onFlipNextCard={flipNextCard}
-      />
-
-      {/* Card canvas */}
-      <div ref={canvasRef} className="relative w-full h-full overflow-hidden">
-        <CardCanvas className="w-full h-full">
-          {expeditionFlow.drawnCards.length > 0 && !expeditionFlow.cardsStreaming && !expeditionFlow.deckFading ? (
-            <Group>
-              {expeditionFlow.drawnCards.map((card, index) => {
-                const dimensions = getCanvasDimensions();
-                const centerX = dimensions.width * 0.5;
-                const centerY = dimensions.height * expeditionConfig.positions.centerY;
-                
-                const safeCardPosition = typeof card.cardPosition === 'number' ? card.cardPosition : index;
-                const isFirstCard = safeCardPosition === 0;
-                const cardScale = expeditionFlow.cardScales[card.id] || 1;
-                
-                const getUnifiedSpacing = () => {
-                  const screenWidth = dimensions.width;
-                  const { base, minSpacing, maxSpacing, breakpoint } = expeditionConfig.spacing;
-                  const baseSpacing = screenWidth > breakpoint ? maxSpacing : base;
-                  const cardWidth = expeditionConfig.cards.center.width;
-                  const totalCardsWidth = expeditionFlow.drawnCards.length * cardWidth;
-                  const availableSpace = screenWidth * 0.8;
-                  const maxPossibleSpacing = (availableSpace - totalCardsWidth) / Math.max(1, expeditionFlow.drawnCards.length - 1);
-                  return Math.max(minSpacing, Math.min(baseSpacing, maxPossibleSpacing));
-                };
-                
-                const spacing = getUnifiedSpacing();
-                const safeCenterX = isNaN(centerX) ? dimensions.width / 2 : centerX;
-                const safeCenterY = isNaN(centerY) ? dimensions.height / 2 : centerY;
-                const safeSpacing = isNaN(spacing) ? expeditionConfig.spacing.base : spacing;
-                
-                let cardX, cardY, cardWidth, cardHeight;
-                
-                if (expeditionFlow.zoomingToFirstCard && isFirstCard) {
-                  cardX = safeCenterX;
-                  cardY = safeCenterY;
-                  cardWidth = expeditionConfig.cards.zoom.width;
-                  cardHeight = expeditionConfig.cards.zoom.height;
-                } else if (expeditionFlow.cardsMovingToTop || expeditionFlow.flippingCardIndex > 0 || expeditionFlow.allCardsFlipped || (!expeditionFlow.cardsStreaming && !expeditionFlow.deckFading)) {
-                  const offset = (safeCardPosition - (expeditionFlow.drawnCards.length - 1) / 2) * safeSpacing;
-                  cardX = safeCenterX + offset;
-                  cardY = expeditionConfig.positions.topY;
-                  cardWidth = expeditionConfig.cards.top.width;
-                  cardHeight = expeditionConfig.cards.top.height;
-                } else {
-                  const offset = (safeCardPosition - (expeditionFlow.drawnCards.length - 1) / 2) * safeSpacing;
-                  cardX = safeCenterX + offset;
-                  cardY = safeCenterY + expeditionConfig.positions.centerOffset;
-                  cardWidth = expeditionConfig.cards.center.width;
-                  cardHeight = expeditionConfig.cards.center.height;
-                }
-                
-                cardX = isNaN(cardX) ? safeCenterX : cardX;
-                cardY = isNaN(cardY) ? safeCenterY : cardY;
-                
+    <div className="h-full w-full overflow-hidden bg-gradient-to-b from-purple-900/20 to-purple-950/40 relative">
+      {hasActiveExpedition && !expeditionsLoading && cats.length > 0 ? (
+        /* Active Expedition Summary */
+        <div className="flex flex-col items-center justify-center w-full h-full p-8">
+          <div className="bg-black/30 backdrop-blur-sm rounded-lg p-8 max-w-md w-full">
+            <h2 className="text-2xl font-bold text-white text-center mb-6">
+              Expedition in Progress
+            </h2>
+            
+            {/* Cat Display */}
+            <div className="grid grid-cols-3 gap-4 mb-8">
+              {[0, 1, 2].map((position) => {
+                const cat = expeditionCats[position];
                 return (
-                  <Card
-                    key={card.id}
-                    x={cardX}
-                    y={cardY}
-                    width={cardWidth}
-                    height={cardHeight}
-                    scale={cardScale}
-                    animationDuration={expeditionFlow.zoomingToFirstCard && isFirstCard ? expeditionConfig.animation.zoomToMinigame : expeditionConfig.animation.positionTransition}
-                    data={{
-                      id: card.id,
-                      value: card.tarotCardName,
-                      suit: '',
-                      faceUp: (safeCardPosition < expeditionFlow.flippingCardIndex && safeCardPosition !== expeditionFlow.flippingCardIndex - 1) || expeditionFlow.allCardsFlipped,
-                      orientation: card.orientation
-                    }}
-                    isFlipping={safeCardPosition === expeditionFlow.flippingCardIndex - 1 && expeditionFlow.flippingCardIndex > 0 && expeditionFlow.flippingCardIndex <= expeditionFlow.drawnCards.length && !expeditionFlow.allCardsFlipped}
-                    onFlipComplete={() => {}}
+                  <CatSpriteBox
+                    key={position}
+                    cat={cat}
+                    size="medium"
+                    variant="purple"
+                    showName
+                    badge={
+                      <div className="w-4 h-4 bg-purple-600 text-white text-xs rounded-full flex items-center justify-center">
+                        {position + 1}
+                      </div>
+                    }
+                    emptyContent={
+                      <div className="w-12 h-12 bg-purple-800/30 rounded border border-purple-500/30 flex items-center justify-center">
+                        <span className="text-purple-300 text-xs">?</span>
+                      </div>
+                    }
                   />
                 );
               })}
-            </Group>
-          ) : (
-            expeditionFlow.deckPosition && (expeditionFlow.cardsStreaming || expeditionFlow.deckFading || expeditionFlow.drawnCards.length === 0) && (
-              <CardDeck
-                ref={deckRef}
-                cards={expeditionCards}
-                deckX={expeditionFlow.deckPosition.x}
-                deckY={expeditionFlow.deckPosition.y}
-              />
-            )
-          )}
-        </CardCanvas>
+            </div>
 
-        {/* Loading Display */}
-        <LoadingDisplay 
-          isLoading={expeditionsLoading} 
-          message="Loading expedition..." 
-        />
-        
-        {/* Error Display */}
-        <ErrorDisplay 
-          error={expeditionsError} 
-          onDismiss={clearError} 
-        />
-        
-        {/* Expedition Results */}
-        <ExpeditionResults
-          currentExpedition={currentExpedition}
-          cats={cats}
-          showResults={expeditionFlow.showResults}
-          onNewExpedition={handleNewExpedition}
-          onBackToCamp={handleBack}
-        />
-        
-        {/* Expedition Setup */}
-        <ExpeditionSetup
-          selectedCats={expeditionSetup.selectedCats}
-          selectedSpread={expeditionSetup.selectedSpread}
-          showSpreadMenu={expeditionFlow.showSpreadMenu}
-          showCatSelector={expeditionSetup.showCatSelector}
-          currentExpedition={currentExpedition}
-          drawnCards={expeditionFlow.drawnCards}
-          isCreatingExpedition={expeditionFlow.isCreatingExpedition}
-          expeditionsLoading={expeditionsLoading}
-          cats={cats}
-          onCatSlotClick={expeditionSetup.handleCatSlotClick}
-          onCatSelect={expeditionSetup.handleCatSelect}
-          onRemoveCat={expeditionSetup.handleRemoveCat}
-          onCancelCatSelection={() => expeditionSetup.setShowCatSelector(null)}
-          onSpreadSelect={expeditionSetup.setSelectedSpread}
-          onBeginExpedition={handleBeginExpedition}
-        />
+            {/* Expedition Info */}
+            <div className="text-center mb-6">
+              <p className="text-purple-200 mb-2">
+                Spread: {currentExpedition?.expedition?.spreadType 
+                  ? currentExpedition.expedition.spreadType.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())
+                  : 'Three Card'}
+              </p>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex gap-3">
+              <button
+                onClick={handleContinueExpedition}
+                className="flex-1 py-3 px-6 bg-purple-600 hover:bg-purple-700 text-white font-semibold rounded-lg transition-colors"
+              >
+                Continue
+              </button>
+              <button
+                onClick={handleEndExpedition}
+                className="flex-1 py-3 px-6 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-lg transition-colors"
+              >
+                End Expedition
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : (
+        /* Expedition Setup */
+        <>
+          {/* Card canvas */}
+          <div ref={canvasRef} className="relative w-full h-full overflow-hidden">
+            <CardCanvas className="w-full h-full">
+              {expeditionFlow.deckPosition && (
+                <CardDeck
+                  ref={deckRef}
+                  cards={expeditionCards}
+                  deckX={expeditionFlow.deckPosition.x}
+                  deckY={expeditionFlow.deckPosition.y}
+                />
+              )}
+            </CardCanvas>
+
+            {/* Expedition Setup */}
+            <ExpeditionSetup
+              selectedCats={expeditionSetup.selectedCats}
+              selectedSpread={expeditionSetup.selectedSpread}
+              showSpreadMenu={expeditionFlow.showSpreadMenu}
+              showCatSelector={expeditionSetup.showCatSelector}
+              currentExpedition={currentExpedition}
+              drawnCards={expeditionFlow.drawnCards}
+              isCreatingExpedition={expeditionFlow.isCreatingExpedition}
+              expeditionsLoading={expeditionsLoading}
+              cats={cats}
+              onCatSlotClick={expeditionSetup.handleCatSlotClick}
+              onCatSelect={expeditionSetup.handleCatSelect}
+              onRemoveCat={expeditionSetup.handleRemoveCat}
+              onCancelCatSelection={() => expeditionSetup.setShowCatSelector(null)}
+              onSpreadSelect={expeditionSetup.setSelectedSpread}
+              onBeginExpedition={handleBeginExpedition}
+            />
+          </div>
+        </>
+      )}
+
+      {/* Common overlays */}
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="relative w-full h-full">
+          {/* Loading Display */}
+          <LoadingDisplay 
+            isLoading={expeditionsLoading} 
+            variant="camp"
+            message="Loading expedition..." 
+          />
+          
+          {/* Error Display */}
+          <ErrorDisplay 
+            error={expeditionsError} 
+            onDismiss={clearError} 
+          />
+          
+          {/* Expedition Results */}
+          <ExpeditionResults
+            currentExpedition={currentExpedition}
+            cats={cats}
+            showResults={expeditionFlow.showResults}
+            onClose={handleResultsClose}
+          />
+
+          {/* Completed Expeditions Button */}
+          {!hasActiveExpedition && lastCompletedExpedition && (
+            <button
+              onClick={() => onEnterExpedition(lastCompletedExpedition.id)}
+              className="absolute top-4 right-4 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors z-10 pointer-events-auto"
+            >
+              View Last Expedition
+            </button>
+          )}
+        </div>
       </div>
     </div>
   );

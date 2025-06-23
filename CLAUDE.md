@@ -219,6 +219,14 @@ npm run build           # Build static files
 4. Create React components (UI)
 5. Add to navigation/routing
 
+### **Protecting Actions with Energy System**
+1. Import energy middleware: `import { requireEnergy, consumeEnergy, requireAndConsumeEnergy } from '../middleware/energyMiddleware'`
+2. Add to route that costs energy: `router.post('/action', authMiddleware, requireAndConsumeEnergy(1), handler)`
+3. Alternative two-step approach:
+   - Check first: `requireEnergy(1)` 
+   - Consume after success: `consumeEnergy(1)`
+4. Energy is automatically regenerated when checked via API or utility functions
+
 ## 🐛 Debugging Tips
 
 ### **API Issues**
@@ -235,6 +243,12 @@ npm run build           # Build static files
 - Check token expiry in JWT debugger
 - Verify Supabase environment variables
 
+### **Energy System Issues**
+- Check user energy: `GET /auth/profile/energy`
+- Energy auto-regenerates when fetched via API endpoints or `energyUtils.ts`
+- Energy middleware logs errors to console for debugging
+- Users start with 5 energy, max 5, regen 1 per 15 minutes (all upgradeable)
+
 ## 🔒 Security Considerations
 
 ### **Current Protections**
@@ -244,6 +258,7 @@ npm run build           # Build static files
 - Rate limiting
 - Input validation
 - Helmet security headers
+- Energy system prevents abuse of costly game actions
 
 ### **Client-Side Security**
 - Cache is memory-only (not persisted)

@@ -5,6 +5,37 @@ import { getCatSpriteUrl } from '../utils/catSprites';
 import { useCatPositionsStore } from '../stores/catPositionsStore';
 
 /**
+ * Cat Placement Hook Documentation
+ * 
+ * USAGE:
+ * ```typescript
+ * // Basic usage (uses campConfig defaults)
+ * const positionedCats = useCatPlacement(cats);
+ * 
+ * // Custom configuration
+ * const positionedCats = useCatPlacement(cats, {
+ *   avoidOverlap: true,
+ *   minDistance: 20,
+ *   minX: 15, maxX: 85,
+ *   minY: 10, maxY: 90
+ * });
+ * ```
+ * 
+ * KEY FEATURES:
+ * - Position persistence via catPositionsStore (cats stay in same spots)
+ * - Automatic boundary calculation (prevents sprite clipping)
+ * - Configurable overlap prevention with distance-based spacing
+ * - Visual variety (random scale, rotation, mirroring)
+ * - Uses campConfig for all default values
+ * 
+ * IMPORTANT: 
+ * - Returns CatWithPosition[] which extends Cat with x, y, scale, rotation, mirrored, spriteUrl
+ * - Positions are percentages (0-100) for responsive layouts
+ * - Only generates new positions for cats not in catPositionsStore
+ * - All options are optional and fallback to campConfig defaults
+ */
+
+/**
  * Extended cat interface that includes positioning and visual properties
  * for rendering cats in the camp environment.
  */
@@ -27,23 +58,23 @@ export interface CatWithPosition extends Cat {
  * Configuration options for cat placement algorithm
  */
 export interface CatPlacementOptions {
-  /** Minimum X boundary as percentage (default: 10) */
+  /** Minimum X boundary as percentage (default: from campConfig) */
   minX?: number;
-  /** Maximum X boundary as percentage (default: 90) */
+  /** Maximum X boundary as percentage (default: from campConfig) */
   maxX?: number;
-  /** Minimum Y boundary as percentage (default: 10) */
+  /** Minimum Y boundary as percentage (default: from campConfig) */
   minY?: number;
-  /** Maximum Y boundary as percentage (default: 90) */
+  /** Maximum Y boundary as percentage (default: from campConfig) */
   maxY?: number;
-  /** Whether to prevent cats from overlapping (default: false) */
+  /** Whether to prevent cats from overlapping (default: from campConfig) */
   avoidOverlap?: boolean;
-  /** Minimum distance between cats in percentage units (default: 15) */
+  /** Minimum distance between cats in percentage units (default: from campConfig) */
   minDistance?: number;
   /** Sprite size in pixels for boundary calculations (default: 128) */
   spriteSize?: number;
-  /** Container width in pixels for boundary calculations (default: 1000) */
+  /** Container width in pixels for boundary calculations (default: from campConfig) */
   containerWidth?: number;
-  /** Container height in pixels for boundary calculations (default: 600) */
+  /** Container height in pixels for boundary calculations (default: from campConfig) */
   containerHeight?: number;
 }
 

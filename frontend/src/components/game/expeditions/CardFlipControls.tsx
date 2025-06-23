@@ -10,6 +10,7 @@ interface CardFlipControlsProps {
   zoomingToFirstCard: boolean;
   allCardsFlipped: boolean;
   onFlipNextCard: () => void;
+  onCompleteExpedition: () => void;
 }
 
 /**
@@ -23,30 +24,52 @@ const CardFlipControls: React.FC<CardFlipControlsProps> = ({
   cardsMovingToTop,
   zoomingToFirstCard,
   allCardsFlipped,
-  onFlipNextCard
+  onFlipNextCard,
+  onCompleteExpedition
 }) => {
-  // Only show button when cards are ready for flipping
-  const shouldShow = drawnCards.length > 0 && 
-                     !cardsStreaming && 
-                     !deckFading && 
-                     !cardsMovingToTop && 
-                     !zoomingToFirstCard && 
-                     !allCardsFlipped;
+  // Show completion button when all cards are flipped but expedition not completed
+  const showCompletionButton = drawnCards.length > 0 && 
+                               !cardsStreaming && 
+                               !deckFading && 
+                               !cardsMovingToTop && 
+                               !zoomingToFirstCard && 
+                               allCardsFlipped &&
+                               flippingCardIndex >= drawnCards.length;
 
-  if (!shouldShow) {
-    return null;
+  // Show flip button when cards are ready for flipping and not all flipped
+  const showFlipButton = drawnCards.length > 0 && 
+                         !cardsStreaming && 
+                         !deckFading && 
+                         !cardsMovingToTop && 
+                         !zoomingToFirstCard && 
+                         !allCardsFlipped &&
+                         flippingCardIndex < drawnCards.length;
+
+  if (showCompletionButton) {
+    return (
+      <button
+        onClick={onCompleteExpedition}
+        className="absolute top-4 right-4 z-10 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors text-sm backdrop-blur-sm"
+      >
+        Complete Expedition
+      </button>
+    );
   }
 
-  const nextCardName = drawnCards[flippingCardIndex]?.tarotCardName || 'Next Card';
+  if (showFlipButton) {
+    const nextCardName = drawnCards[flippingCardIndex]?.tarotCardName || 'Next Card';
 
-  return (
-    <button
-      onClick={onFlipNextCard}
-      className="absolute top-4 right-4 z-10 bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg transition-colors text-sm backdrop-blur-sm"
-    >
-      Flip {nextCardName} ({flippingCardIndex + 1}/{drawnCards.length})
-    </button>
-  );
+    return (
+      <button
+        onClick={onFlipNextCard}
+        className="absolute top-4 right-4 z-10 bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg transition-colors text-sm backdrop-blur-sm"
+      >
+        Flip {nextCardName} ({flippingCardIndex + 1}/{drawnCards.length})
+      </button>
+    );
+  }
+
+  return null;
 };
 
 export default CardFlipControls;

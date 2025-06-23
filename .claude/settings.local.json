@@ -24,7 +24,8 @@
       "Bash(mv:*)",
       "Bash(grep:*)",
       "Bash(find:*)",
-      "Bash(npm run typecheck:*)"
+      "Bash(npm run typecheck:*)",
+      "Bash(true)"
     ],
     "deny": []
   }

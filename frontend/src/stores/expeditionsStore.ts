@@ -11,6 +11,8 @@ import {
 interface ExpeditionsState {
   expeditions: Expedition[];
   currentExpedition: CompleteExpeditionData | null;
+  lastCompletedExpedition: Expedition | null;
+  completedExpeditionResults: CompleteExpeditionData | null; // Temporary storage for showing results
   isLoading: boolean;
   error: string | null;
   lastFetch: number | null;
@@ -18,16 +20,21 @@ interface ExpeditionsState {
   // Actions
   fetchExpeditions: (force?: boolean) => Promise<void>;
   fetchCurrentExpedition: () => Promise<void>;
+  fetchExpedition: (expeditionId: string) => Promise<void>;
+  fetchLastCompletedExpedition: () => Promise<void>;
   createExpedition: (data: CreateExpeditionRequest) => Promise<CompleteExpeditionData | null>;
   drawCards: (expeditionId: string, data?: DrawCardsRequest) => Promise<ExpeditionCard[] | null>;
   completeExpedition: (expeditionId: string) => Promise<CompleteExpeditionData | null>;
   clearError: () => void;
   clearCurrentExpedition: () => void;
+  clearCompletedResults: () => void;
 }
 
 export const useExpeditionsStore = create<ExpeditionsState>((set, get) => ({
   expeditions: [],
   currentExpedition: null,
+  lastCompletedExpedition: null,
+  completedExpeditionResults: null,
   isLoading: false,
   error: null,
   lastFetch: null,
@@ -76,17 +83,8 @@ export const useExpeditionsStore = create<ExpeditionsState>((set, get) => ({
       await get().fetchExpeditions();
     }
     
-    // Look for active or cards_drawn expedition first
+    // Look for active or cards_drawn expedition only
     let targetExpedition = get().expeditions.find(exp => exp.status === 'active' || exp.status === 'cards_drawn');
-    
-    // If no active expedition, get the most recent completed one (for results display)
-    if (!targetExpedition) {
-      const completedExpeditions = get().expeditions
-        .filter(exp => exp.status === 'completed')
-        .sort((a, b) => new Date(b.completedAt || b.createdAt).getTime() - new Date(a.completedAt || a.createdAt).getTime());
-      
-      targetExpedition = completedExpeditions[0];
-    }
     
     if (!targetExpedition) {
       set({ currentExpedition: null });
@@ -116,6 +114,50 @@ export const useExpeditionsStore = create<ExpeditionsState>((set, get) => ({
         error: 'An unexpected error occurred',
       });
     }
+  },
+
+  fetchExpedition: async (expeditionId: string) => {
+    set({ isLoading: true, error: null });
+    
+    try {
+      const response = await expeditionsService.getExpedition(expeditionId);
+      
+      if (response.success && response.data) {
+        set({
+          currentExpedition: response.data,
+          isLoading: false,
+          error: null,
+        });
+      } else {
+        set({
+          isLoading: false,
+          error: response.error?.message || 'Failed to fetch expedition',
+        });
+      }
+    } catch (error) {
+      set({
+        isLoading: false,
+        error: 'An unexpected error occurred',
+      });
+    }
+  },
+
+  fetchLastCompletedExpedition: async () => {
+    const state = get();
+    
+    // First check if we have expeditions loaded
+    if (state.expeditions.length === 0) {
+      await get().fetchExpeditions();
+    }
+    
+    // Get the most recent completed expedition
+    const completedExpeditions = get().expeditions
+      .filter(exp => exp.status === 'completed')
+      .sort((a, b) => new Date(b.completedAt || b.createdAt).getTime() - new Date(a.completedAt || a.createdAt).getTime());
+    
+    const lastCompleted = completedExpeditions[0] || null;
+    
+    set({ lastCompletedExpedition: lastCompleted });
   },
 
   createExpedition: async (data: CreateExpeditionRequest) => {
@@ -218,9 +260,13 @@ export const useExpeditionsStore = create<ExpeditionsState>((set, get) => ({
         // Note: After completion, the backend cleans up cards, cats, and minigames
         // The response.data will contain results but empty arrays for cards/cats/minigames
         // This is expected behavior - we keep the expedition and results for history
+        
+        // Clear current expedition, set as last completed, and store results temporarily
         set({
           expeditions: updatedExpeditions,
-          currentExpedition: response.data,
+          currentExpedition: null,
+          lastCompletedExpedition: response.data.expedition,
+          completedExpeditionResults: response.data,
           isLoading: false,
           error: null,
           lastFetch: Date.now(),
@@ -248,5 +294,9 @@ export const useExpeditionsStore = create<ExpeditionsState>((set, get) => ({
 
   clearCurrentExpedition: () => {
     set({ currentExpedition: null });
+  },
+
+  clearCompletedResults: () => {
+    set({ completedExpeditionResults: null });
   },
 }));

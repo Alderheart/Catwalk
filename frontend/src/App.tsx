@@ -1,19 +1,22 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import Camp from './components/game/Camp'
 import BottomTabBar from './components/ui/BottomTabBar'
 import TopHeader from './components/ui/TopHeader'
-import PersistentCards from './components/ui/PersistentCards'
 import CatsList from './components/game/CatsList'
 import AuthPage from './components/auth/AuthPage'
 import MenuPage from './components/game/MenuPage'
 import AdminPanel from './components/admin/AdminPanel'
 import ExpeditionsPage from './components/game/expeditions/ExpeditionsPage'
+import ExpeditionScreen from './components/game/expeditions/ExpeditionScreen'
+import LifePage from './components/game/LifePage'
+import LoadingDisplay from './components/shared/LoadingDisplay'
 import { useTabBarStore } from './stores/tabBarStore'
 import { useAuthStore } from './stores/authStore'
 
 function App() {
   const { activeTab, showTabBar, setActiveTab } = useTabBarStore()
   const { isAuthenticated, isLoading, checkAuthStatus } = useAuthStore()
+  const [expeditionScreenId, setExpeditionScreenId] = useState<string | null>(null)
 
   // Check auth status on app load
   useEffect(() => {
@@ -32,6 +35,15 @@ function App() {
     setActiveTab(tabId)
   }
 
+  const handleEnterExpedition = (expeditionId: string) => {
+    setExpeditionScreenId(expeditionId)
+  }
+
+  const handleExitExpedition = () => {
+    setExpeditionScreenId(null)
+    setActiveTab('expeditions')
+  }
+
   const renderContent = () => {
     switch (activeTab) {
       case 'camp':
@@ -45,7 +57,9 @@ function App() {
           </div>
         )
       case 'expeditions':
-        return <ExpeditionsPage />
+        return <ExpeditionsPage onEnterExpedition={handleEnterExpedition} />
+      case 'life':
+        return <LifePage />
       case 'menu':
         return <MenuPage />
       case 'admin':
@@ -57,14 +71,7 @@ function App() {
 
   // Show loading or auth page if not authenticated
   if (isLoading) {
-    return (
-      <div className="h-full w-full flex items-center justify-center bg-gray-900">
-        <div className="text-white text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
-          <p className="text-lg">Loading...</p>
-        </div>
-      </div>
-    )
+    return <LoadingDisplay isLoading={isLoading} variant="app" />;
   }
 
   if (!isAuthenticated) {
@@ -73,21 +80,32 @@ function App() {
 
   return (
     <div className="relative h-full w-full overflow-hidden flex flex-col">
-      {/* Top Header */}
-      <TopHeader />
-      
-      {/* Main content */}
-      <div className={`flex-1 w-full overflow-hidden ${showTabBar && activeTab !== 'expeditions' ? 'pb-16' : ''}`}>
-        {renderContent()}
-      </div>
-      
-      {/* Bottom Tab Bar - Hide when on expeditions page */}
-      {showTabBar && activeTab !== 'expeditions' && (
-        <BottomTabBar activeTab={activeTab} onTabChange={handleTabChange} />
+      {/* Expedition Screen - Full screen overlay */}
+      {expeditionScreenId && (
+        <ExpeditionScreen 
+          expeditionId={expeditionScreenId}
+          onExit={handleExitExpedition}
+        />
       )}
       
-      {/* Persistent Cards - Floating modal showing expedition cards */}
-      <PersistentCards />
+      {/* Main App - Hidden when expedition screen is active */}
+      {!expeditionScreenId && (
+        <>
+          {/* Top Header */}
+          <TopHeader />
+          
+          {/* Main content */}
+          <div className={`flex-1 w-full overflow-hidden ${showTabBar ? 'pb-16' : ''}`}>
+            {renderContent()}
+          </div>
+          
+          {/* Bottom Tab Bar */}
+          {showTabBar && (
+            <BottomTabBar activeTab={activeTab} onTabChange={handleTabChange} />
+          )}
+          
+        </>
+      )}
     </div>
   )
 }

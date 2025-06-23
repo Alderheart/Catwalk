@@ -2,6 +2,7 @@ import { Router } from 'express';
 import authRouter from './auth';
 import catsRouter from './cats';
 import expeditionsRouter from './expeditions';
+import rewardsRouter from './rewards';
 
 const router = Router();
 
@@ -21,5 +22,6 @@ router.get('/health', (_req, res) => {
 router.use('/auth', authRouter);
 router.use('/cats', catsRouter);
 router.use('/expeditions', expeditionsRouter);
+router.use('/rewards', rewardsRouter);
 
 export default router;

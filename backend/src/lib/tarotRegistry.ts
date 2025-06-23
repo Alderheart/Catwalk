@@ -1,7 +1,12 @@
 import { TarotCardName } from '../types';
 
-// Tarot card registry for minigame mapping
-// This will be expanded when minigames are implemented
+/**
+ * Tarot Card Registry Documentation
+ * 
+ * 1. **Helper Functions Available**:
+ *    - getMinigameType(cardName, orientation): Get minigame type for card
+ *    - getCardsWithMinigames(): List all cards with minigames defined
+ */
 
 export interface TarotCardDefinition {
   name: TarotCardName;

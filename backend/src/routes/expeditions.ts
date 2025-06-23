@@ -5,6 +5,7 @@ import {
   Expedition, 
   ExpeditionCard, 
   ExpeditionCat,
+  ExpeditionMinigame,
   TarotCardName,
   CreateExpeditionRequest,
   CompleteExpeditionResponse,
@@ -14,17 +15,21 @@ import {
 } from '../types';
 import { authMiddleware } from '../middleware/auth';
 import { supabase } from '../lib/supabase';
+import { 
+  generateConfiguredTarotDeck, 
+  getRandomOrientation
+} from '../config/tarotConfig';
 
 const router = Router();
 
-// Major Arcana tarot cards (22 cards)
-const MAJOR_ARCANA: TarotCardName[] = [
-  'The Fool', 'The Magician', 'The High Priestess', 'The Empress', 'The Emperor',
-  'The Hierophant', 'The Lovers', 'The Chariot', 'Strength', 'The Hermit',
-  'Wheel of Fortune', 'Justice', 'The Hanged Man', 'Death', 'Temperance',
-  'The Devil', 'The Tower', 'The Star', 'The Moon', 'The Sun',
-  'Judgement', 'The World'
-];
+// Major Arcana tarot cards (22 cards) - kept for reference but deck generation now uses config
+// const MAJOR_ARCANA: TarotCardName[] = [
+//   'The Fool', 'The Magician', 'The High Priestess', 'The Empress', 'The Emperor',
+//   'The Hierophant', 'The Lovers', 'The Chariot', 'Strength', 'The Hermit',
+//   'Wheel of Fortune', 'Justice', 'The Hanged Man', 'Death', 'Temperance',
+//   'The Devil', 'The Tower', 'The Star', 'The Moon', 'The Sun',
+//   'Judgement', 'The World'
+// ];
 
 // Spread configurations
 const SPREAD_CONFIGS = {
@@ -45,7 +50,8 @@ const CAT_BREEDS = ['tabby', 'tortoiseshell', 'calico', 'siamese', 'bengal', 'ma
 
 // Helper functions
 function generateTarotDeck(): TarotCardName[] {
-  return [...MAJOR_ARCANA];
+  // Use the configured deck instead of the static MAJOR_ARCANA
+  return generateConfiguredTarotDeck();
 }
 
 function shuffleTarotDeck(deck: TarotCardName[]): TarotCardName[] {
@@ -583,8 +589,13 @@ router.post('/:expeditionId/draw-cards', authMiddleware, async (req: Authenticat
 
 // Complete expedition (draw cards and generate results)
 router.post('/:expeditionId/complete', authMiddleware, async (req: AuthenticatedRequest, res: Response) => {
+  // Force output to stderr so it shows up
+  process.stderr.write(`🚀 EXPEDITION COMPLETE ENDPOINT CALLED for expedition: ${req.params.expeditionId}\n`);
+  process.stderr.write(`🔑 User ID: ${req.userId}\n`);
+  
   try {
     const { expeditionId } = req.params;
+    process.stderr.write(`📝 Processing expedition completion for: ${expeditionId}\n`);
     
     // Get expedition and verify it's active or cards_drawn
     const { data: expedition, error: expeditionError } = await supabase
@@ -646,14 +657,20 @@ router.post('/:expeditionId/complete', authMiddleware, async (req: Authenticated
       // Generate and draw tarot cards
       const spreadConfig = SPREAD_CONFIGS[expedition.spread_type as keyof typeof SPREAD_CONFIGS];
       const deck = shuffleTarotDeck(generateTarotDeck());
+      
+      // Validate we have enough cards for the spread
+      if (deck.length < spreadConfig.positions) {
+        throw new Error(`Not enough enabled cards (${deck.length}) for ${expedition.spread_type} spread (requires ${spreadConfig.positions})`);
+      }
+      
       const drawnCards = deck.slice(0, spreadConfig.positions);
       
-      // Create expedition cards with random orientations
+      // Create expedition cards with configured orientations
       const expeditionCardsData = drawnCards.map((card, index) => ({
         expedition_id: expeditionId,
         card_position: index,
         tarot_card_name: card,
-        orientation: Math.random() < 0.7 ? 'upright' : 'reversed' // 70% chance upright
+        orientation: getRandomOrientation(card) // Use configuration-based orientation
       }));
       
       const { data: newExpeditionCards, error: cardsInsertError } = await supabase
@@ -723,95 +740,57 @@ router.post('/:expeditionId/complete', authMiddleware, async (req: Authenticated
     
     if (updateError) throw updateError;
     
-    // Apply rewards to user and cats
-    if (finalRewards.coins && finalRewards.coins > 0) {
-      // Add coins to user - need to fetch current coins and update
-      const { data: userData, error: userFetchError } = await supabase
-        .from('users')
-        .select('coins')
-        .eq('id', req.userId!)
-        .single();
-      
-      if (!userFetchError && userData) {
-        const { error: coinsError } = await supabase
-          .from('users')
-          .update({ 
-            coins: userData.coins + finalRewards.coins 
-          })
-          .eq('id', req.userId!);
-        
-        if (coinsError) console.error('Error updating user coins:', coinsError);
-      }
-    }
+    process.stderr.write(`✅ Expedition ${expeditionId} marked as completed, starting cleanup process...\n`);
     
-    // Apply experience to cats
-    if (finalRewards.experience) {
-      for (const [catId, experience] of Object.entries(finalRewards.experience)) {
-        // Fetch current experience and update
-        const { data: catData, error: catFetchError } = await supabase
-          .from('cats')
-          .select('experience')
-          .eq('id', catId)
-          .eq('user_id', req.userId!)
-          .single();
-        
-        if (!catFetchError && catData) {
-          const { error: expError } = await supabase
-            .from('cats')
-            .update({ 
-              experience: catData.experience + experience 
-            })
-            .eq('id', catId)
-            .eq('user_id', req.userId!);
-          
-          if (expError) console.error(`Error updating cat ${catId} experience:`, expError);
-        }
-      }
-    }
-    
-    // Create new cats
-    if (finalRewards.newCats && finalRewards.newCats.length > 0) {
-      const newCatsData = finalRewards.newCats.map(cat => ({
-        ...cat,
-        user_id: req.userId!,
-        level: 1,
-        experience: 0,
-        max_level: 20
-      }));
-      
-      const { error: newCatsError } = await supabase
-        .from('cats')
-        .insert(newCatsData);
-      
-      if (newCatsError) console.error('Error creating new cats:', newCatsError);
-    }
+    // Rewards are now handled separately through the /rewards endpoints
+    // The rewards are still calculated and stored in expedition_results for reference
+    // but not automatically applied to the user's account
 
     // Clean up expedition data after completion
     // Delete expedition cards, cats, minigames (results can be kept for history)
-    const cleanupPromises = [
-      supabase
+    process.stderr.write(`Starting cleanup for expedition ${expeditionId}\n`);
+    
+    try {
+      // Delete expedition cards
+      const { error: cardsDeleteError } = await supabase
         .from('expedition_cards')
         .delete()
-        .eq('expedition_id', expeditionId),
-      supabase
+        .eq('expedition_id', expeditionId);
+      
+      if (cardsDeleteError) {
+        process.stderr.write(`❌ Error deleting expedition cards: ${JSON.stringify(cardsDeleteError)}\n`);
+      } else {
+        process.stderr.write(`✅ Deleted expedition cards for expedition ${expeditionId}\n`);
+      }
+
+      // Delete expedition cats  
+      const { error: catsDeleteError } = await supabase
         .from('expedition_cats')
         .delete()
-        .eq('expedition_id', expeditionId),
-      supabase
+        .eq('expedition_id', expeditionId);
+      
+      if (catsDeleteError) {
+        process.stderr.write(`❌ Error deleting expedition cats: ${JSON.stringify(catsDeleteError)}\n`);
+      } else {
+        process.stderr.write(`✅ Deleted expedition cats for expedition ${expeditionId}\n`);
+      }
+
+      // Delete expedition minigames
+      const { error: minigamesDeleteError } = await supabase
         .from('expedition_minigames')
         .delete()
-        .eq('expedition_id', expeditionId)
-    ];
-
-    const cleanupResults = await Promise.allSettled(cleanupPromises);
-    
-    // Log any cleanup errors but don't fail the request
-    cleanupResults.forEach((result, index) => {
-      if (result.status === 'rejected') {
-        const tableNames = ['expedition_cards', 'expedition_cats', 'expedition_minigames'];
-        console.error(`Error cleaning up ${tableNames[index]}:`, result.reason);
+        .eq('expedition_id', expeditionId);
+      
+      if (minigamesDeleteError) {
+        process.stderr.write(`❌ Error deleting expedition minigames: ${JSON.stringify(minigamesDeleteError)}\n`);
+      } else {
+        process.stderr.write(`✅ Deleted expedition minigames for expedition ${expeditionId}\n`);
       }
-    });
+      
+    } catch (cleanupError) {
+      process.stderr.write(`❌ Unexpected error during expedition cleanup: ${cleanupError}\n`);
+      // Don't fail the request, but log the error for debugging
+    }
     
     const response: ApiResponse<CompleteExpeditionResponse> = {
       success: true,
@@ -824,14 +803,135 @@ router.post('/:expeditionId/complete', authMiddleware, async (req: Authenticated
       }
     };
     
+    process.stderr.write(`✅ Expedition completion successful, sending response\n`);
     res.json(response);
   } catch (error) {
-    console.error('Error completing expedition:', error);
+    process.stderr.write(`❌ ERROR in expedition completion: ${error}\n`);
+    process.stderr.write(`❌ Error stack: ${error instanceof Error ? error.stack : 'No stack trace'}\n`);
     res.status(500).json({
       success: false,
       error: {
         code: 'SERVER_ERROR',
         message: 'Failed to complete expedition'
+      }
+    });
+  }
+});
+
+// Complete minigame for expedition
+router.post('/:expeditionId/minigames/:cardPosition/complete', authMiddleware, async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const { expeditionId, cardPosition } = req.params;
+    const { score, minigameType } = req.body;
+    
+    // Validate input
+    if (typeof score !== 'number' || score < 0 || score > 100) {
+      res.status(400).json({
+        success: false,
+        error: {
+          code: 'INVALID_INPUT',
+          message: 'Score must be a number between 0 and 100'
+        }
+      });
+      return;
+    }
+    
+    // Get expedition and verify user ownership
+    const { data: expedition, error: expeditionError } = await supabase
+      .from('expeditions')
+      .select('*')
+      .eq('id', expeditionId)
+      .eq('user_id', req.userId!)
+      .single();
+    
+    if (expeditionError) {
+      if (expeditionError.code === 'PGRST116') {
+        res.status(404).json({
+          success: false,
+          error: {
+            code: 'NOT_FOUND',
+            message: 'Expedition not found'
+          }
+        });
+        return;
+      }
+      throw expeditionError;
+    }
+    
+    // Check expedition status (must be cards_drawn or completed)
+    if (!['cards_drawn', 'completed'].includes(expedition.status)) {
+      res.status(400).json({
+        success: false,
+        error: {
+          code: 'INVALID_STATE',
+          message: 'Cards must be drawn before completing minigames'
+        }
+      });
+      return;
+    }
+    
+    // Get the specific minigame
+    const { data: minigame, error: minigameError } = await supabase
+      .from('expedition_minigames')
+      .select('*')
+      .eq('expedition_id', expeditionId)
+      .eq('card_position', parseInt(cardPosition))
+      .single();
+    
+    if (minigameError) {
+      if (minigameError.code === 'PGRST116') {
+        res.status(404).json({
+          success: false,
+          error: {
+            code: 'NOT_FOUND',
+            message: 'Minigame not found for this card position'
+          }
+        });
+        return;
+      }
+      throw minigameError;
+    }
+    
+    // Check if minigame is already completed
+    if (minigame.status === 'completed') {
+      res.status(400).json({
+        success: false,
+        error: {
+          code: 'ALREADY_COMPLETED',
+          message: 'This minigame has already been completed'
+        }
+      });
+      return;
+    }
+    
+    // Update minigame with completion data
+    const { data: updatedMinigame, error: updateError } = await supabase
+      .from('expedition_minigames')
+      .update({
+        status: 'completed',
+        score: score,
+        minigame_type: minigameType || null,
+        completed_at: new Date().toISOString()
+      })
+      .eq('id', minigame.id)
+      .select()
+      .single();
+    
+    if (updateError) throw updateError;
+    
+    const response: ApiResponse<ExpeditionMinigame> = {
+      success: true,
+      data: updatedMinigame
+    };
+    
+    res.json(response);
+  } catch (error) {
+    console.error('Error completing minigame:', error);
+    res.status(500).json({
+      success: false,
+      error: {
+        code: 'SERVER_ERROR',
+        message: 'Failed to complete minigame'
       }
     });
   }
