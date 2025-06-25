@@ -23,7 +23,7 @@
  *    - PATCH /auth/profile/energy/settings - Update max energy or regen rate
  * 
  * 5. **Middleware Integration**:
- *    - Import from '../middleware/energyMiddleware'
+ *    - Import from '../middleware/energy'
  *    - Always use AFTER authMiddleware
  *    - Energy info is added to req.userEnergy and req.energyConsumed
  * 
@@ -39,6 +39,14 @@
  */
 
 import { supabase } from './supabase';
+
+/**
+ * Parse insufficient energy error to extract current energy amount
+ */
+export function parseInsufficientEnergyError(errorMessage: string): number | undefined {
+  const match = errorMessage.match(/Available: (\d+)/);
+  return match ? parseInt(match[1]) : undefined;
+}
 
 export interface EnergyStatus {
   daily_energy: number;
@@ -108,9 +116,9 @@ export function calculateMinutesUntilNextEnergy(
 export async function getUserEnergyStatus(userId: string): Promise<EnergyStatus | null> {
   try {
     const { data: user, error } = await supabase
-      .from('users')
+      .from('user_resources')
       .select('daily_energy, max_daily_energy, energy_regen_rate_minutes, last_energy_update')
-      .eq('id', userId)
+      .eq('user_id', userId)
       .single();
 
     if (error || !user) {
@@ -131,12 +139,12 @@ export async function getUserEnergyStatus(userId: string): Promise<EnergyStatus 
     // Update database if energy changed
     if (shouldUpdate) {
       const { error: updateError } = await supabase
-        .from('users')
+        .from('user_resources')
         .update({
           daily_energy: newEnergy,
           last_energy_update: now.toISOString()
         })
-        .eq('id', userId);
+        .eq('user_id', userId);
 
       if (updateError) {
         console.error('Error updating user energy:', updateError);
@@ -166,76 +174,56 @@ export async function getUserEnergyStatus(userId: string): Promise<EnergyStatus 
 }
 
 /**
- * Consume energy for a user action
+ * Consume energy for a user action (ATOMIC OPERATION)
  * 
- * Use this when you want to immediately deduct energy.
- * It automatically handles energy regeneration before consuming.
+ * This function performs an atomic energy consumption to prevent race conditions.
+ * It calculates regeneration and consumes energy in a single database operation.
+ * 
+ * @param userId - The user's ID
+ * @param amount - Amount of energy to consume (default: 1)
+ * @returns Success status with current energy level
  */
 export async function consumeUserEnergy(
   userId: string, 
   amount: number = 1
 ): Promise<{ success: boolean; currentEnergy?: number; error?: string }> {
   try {
-    // First get current energy status
-    const energyStatus = await getUserEnergyStatus(userId);
+    const now = new Date();
     
-    if (!energyStatus) {
+    // Perform atomic energy consumption with regeneration calculation
+    // This RPC function will handle regeneration and consumption atomically
+    const { data, error } = await supabase.rpc('consume_energy_atomic', {
+      p_user_id: userId,
+      p_amount: amount,
+      p_current_time: now.toISOString()
+    });
+
+    if (error) {
+      // Check if it's an insufficient energy error
+      if (error.message?.includes('Insufficient energy')) {
+        return {
+          success: false,
+          error: error.message,
+          currentEnergy: parseInsufficientEnergyError(error.message)
+        };
+      }
+      
+      console.error('Error consuming user energy:', error);
+      return { success: false, error: 'Failed to consume energy' };
+    }
+
+    if (!data || data.length === 0) {
       return { success: false, error: 'User not found' };
     }
 
-    // Check if user has enough energy
-    if (energyStatus.daily_energy < amount) {
-      return { 
-        success: false, 
-        error: `Insufficient energy. Required: ${amount}, Available: ${energyStatus.daily_energy}`,
-        currentEnergy: energyStatus.daily_energy
-      };
-    }
-
-    // Consume energy
-    const newEnergy = energyStatus.daily_energy - amount;
-    const { error } = await supabase
-      .from('users')
-      .update({
-        daily_energy: newEnergy,
-        last_energy_update: new Date().toISOString()
-      })
-      .eq('id', userId);
-
-    if (error) {
-      return { success: false, error: 'Failed to update energy' };
-    }
-
-    return { success: true, currentEnergy: newEnergy };
+    const result = data[0];
+    return { 
+      success: true, 
+      currentEnergy: result.new_energy 
+    };
   } catch (error) {
     console.error('Error consuming user energy:', error);
     return { success: false, error: 'Server error' };
   }
 }
 
-/**
- * Check if user has enough energy for an action (without consuming)
- * 
- * Use this for validation without actually deducting energy.
- * Energy regeneration is automatically applied.
- */
-export async function checkUserEnergy(
-  userId: string, 
-  requiredAmount: number = 1
-): Promise<{ hasEnough: boolean; currentEnergy: number; error?: string }> {
-  try {
-    const energyStatus = await getUserEnergyStatus(userId);
-    
-    if (!energyStatus) {
-      return { hasEnough: false, currentEnergy: 0, error: 'User not found' };
-    }
-
-    return {
-      hasEnough: energyStatus.daily_energy >= requiredAmount,
-      currentEnergy: energyStatus.daily_energy
-    };
-  } catch (error) {
-    console.error('Error checking user energy:', error);
-    return { hasEnough: false, currentEnergy: 0, error: 'Server error' };
-  }
-}

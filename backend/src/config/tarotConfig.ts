@@ -1,4 +1,4 @@
-import { TarotCardName } from '../types';
+import { TarotCardName } from '../types/expedition';
 
 export type TarotOrientation = 'upright' | 'reversed';
 

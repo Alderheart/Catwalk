@@ -1,4 +1,4 @@
-import { TarotCardName } from '../types';
+import { TarotCardName } from '../types/expedition';
 
 /**
  * Tarot Card Registry Documentation

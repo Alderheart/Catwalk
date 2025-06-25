@@ -2,34 +2,29 @@ import { Router, Response } from 'express';
 import { 
   AuthenticatedRequest, 
   ApiResponse, 
-  Expedition, 
-  ExpeditionCard, 
+  PaginationQuery
+} from '../types';
+import {
+  Expedition,
+  ExpeditionCard,
   ExpeditionCat,
   ExpeditionMinigame,
   TarotCardName,
   CreateExpeditionRequest,
   CompleteExpeditionResponse,
   ExpeditionRewards,
-  NewCatReward,
-  PaginationQuery
-} from '../types';
+  NewCatReward
+} from '../types/expedition';
 import { authMiddleware } from '../middleware/auth';
 import { supabase } from '../lib/supabase';
 import { 
   generateConfiguredTarotDeck, 
   getRandomOrientation
 } from '../config/tarotConfig';
+import { getCardRewards } from '../config/expeditionRewards';
 
 const router = Router();
 
-// Major Arcana tarot cards (22 cards) - kept for reference but deck generation now uses config
-// const MAJOR_ARCANA: TarotCardName[] = [
-//   'The Fool', 'The Magician', 'The High Priestess', 'The Empress', 'The Emperor',
-//   'The Hierophant', 'The Lovers', 'The Chariot', 'Strength', 'The Hermit',
-//   'Wheel of Fortune', 'Justice', 'The Hanged Man', 'Death', 'Temperance',
-//   'The Devil', 'The Tower', 'The Star', 'The Moon', 'The Sun',
-//   'Judgement', 'The World'
-// ];
 
 // Spread configurations
 const SPREAD_CONFIGS = {
@@ -80,34 +75,12 @@ function generateRandomCat(): NewCatReward {
 function generateTarotRewards(card: { tarotCardName: TarotCardName; orientation: string }): ExpeditionRewards {
   const rewards: ExpeditionRewards = {};
   
-  // Base reward chances and amounts based on tarot card (simplified for now)
-  // In the future, this will be replaced by minigame scores
-  const tarotCards = {
-    'The Fool': { coins: 30, expBase: 15, newCatChance: 0.05 },
-    'The Magician': { coins: 80, expBase: 40, newCatChance: 0.10 },
-    'The High Priestess': { coins: 60, expBase: 35, newCatChance: 0.08 },
-    'The Empress': { coins: 90, expBase: 45, newCatChance: 0.12 },
-    'The Emperor': { coins: 85, expBase: 42, newCatChance: 0.10 },
-    'The Hierophant': { coins: 70, expBase: 35, newCatChance: 0.08 },
-    'The Lovers': { coins: 65, expBase: 30, newCatChance: 0.15 },
-    'The Chariot': { coins: 75, expBase: 40, newCatChance: 0.06 },
-    'Strength': { coins: 80, expBase: 50, newCatChance: 0.05 },
-    'The Hermit': { coins: 50, expBase: 35, newCatChance: 0.03 },
-    'Wheel of Fortune': { coins: 100, expBase: 30, newCatChance: 0.20 },
-    'Justice': { coins: 70, expBase: 40, newCatChance: 0.08 },
-    'The Hanged Man': { coins: 40, expBase: 45, newCatChance: 0.05 },
-    'Death': { coins: 60, expBase: 50, newCatChance: 0.10 },
-    'Temperance': { coins: 65, expBase: 35, newCatChance: 0.07 },
-    'The Devil': { coins: 90, expBase: 25, newCatChance: 0.12 },
-    'The Tower': { coins: 85, expBase: 20, newCatChance: 0.08 },
-    'The Star': { coins: 75, expBase: 40, newCatChance: 0.10 },
-    'The Moon': { coins: 55, expBase: 30, newCatChance: 0.06 },
-    'The Sun': { coins: 95, expBase: 50, newCatChance: 0.15 },
-    'Judgement': { coins: 80, expBase: 45, newCatChance: 0.10 },
-    'The World': { coins: 100, expBase: 60, newCatChance: 0.18 }
-  };
+  const cardData = getCardRewards(card.tarotCardName);
+  if (!cardData) {
+    console.error(`No reward configuration found for card: ${card.tarotCardName}`);
+    return rewards;
+  }
   
-  const cardData = tarotCards[card.tarotCardName];
   const multiplier = card.orientation === 'upright' ? 1 : 0.7; // Reversed cards give 70% rewards
   
   // Coins (80% chance)
@@ -242,6 +215,7 @@ router.get('/', authMiddleware, async (req: AuthenticatedRequest, res: Response)
     };
     
     res.json(response);
+    return;
   } catch (error) {
     console.error('Error fetching expeditions:', error);
     res.status(500).json({
@@ -341,6 +315,7 @@ router.get('/:expeditionId', authMiddleware, async (req: AuthenticatedRequest, r
     };
     
     res.json(response);
+    return;
   } catch (error) {
     console.error('Error fetching expedition:', error);
     res.status(500).json({
@@ -354,7 +329,7 @@ router.get('/:expeditionId', authMiddleware, async (req: AuthenticatedRequest, r
 });
 
 // Create new expedition
-router.post('/', authMiddleware, async (req: AuthenticatedRequest, res: Response) => {
+router.post('/', authMiddleware, async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   try {
     const { spreadType, catIds }: CreateExpeditionRequest = req.body;
     
@@ -461,6 +436,7 @@ router.post('/', authMiddleware, async (req: AuthenticatedRequest, res: Response
     };
     
     res.status(201).json(response);
+    return;
   } catch (error) {
     console.error('Error creating expedition:', error);
     res.status(500).json({
@@ -474,7 +450,7 @@ router.post('/', authMiddleware, async (req: AuthenticatedRequest, res: Response
 });
 
 // Draw cards for expedition
-router.post('/:expeditionId/draw-cards', authMiddleware, async (req: AuthenticatedRequest, res: Response) => {
+router.post('/:expeditionId/draw-cards', authMiddleware, async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   try {
     const { expeditionId } = req.params;
     const { cardCount } = req.body;
@@ -575,6 +551,7 @@ router.post('/:expeditionId/draw-cards', authMiddleware, async (req: Authenticat
     };
     
     res.json(response);
+    return;
   } catch (error) {
     console.error('Error drawing cards:', error);
     res.status(500).json({
@@ -588,14 +565,12 @@ router.post('/:expeditionId/draw-cards', authMiddleware, async (req: Authenticat
 });
 
 // Complete expedition (draw cards and generate results)
-router.post('/:expeditionId/complete', authMiddleware, async (req: AuthenticatedRequest, res: Response) => {
-  // Force output to stderr so it shows up
-  process.stderr.write(`🚀 EXPEDITION COMPLETE ENDPOINT CALLED for expedition: ${req.params.expeditionId}\n`);
-  process.stderr.write(`🔑 User ID: ${req.userId}\n`);
+router.post('/:expeditionId/complete', authMiddleware, async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+  console.log(`Expedition completion started for expedition: ${req.params.expeditionId}, user: ${req.userId}`);
   
   try {
     const { expeditionId } = req.params;
-    process.stderr.write(`📝 Processing expedition completion for: ${expeditionId}\n`);
+    console.log(`Processing expedition completion for: ${expeditionId}`);
     
     // Get expedition and verify it's active or cards_drawn
     const { data: expedition, error: expeditionError } = await supabase
@@ -740,7 +715,7 @@ router.post('/:expeditionId/complete', authMiddleware, async (req: Authenticated
     
     if (updateError) throw updateError;
     
-    process.stderr.write(`✅ Expedition ${expeditionId} marked as completed, starting cleanup process...\n`);
+    console.log(`Expedition ${expeditionId} marked as completed, starting cleanup process`);
     
     // Rewards are now handled separately through the /rewards endpoints
     // The rewards are still calculated and stored in expedition_results for reference
@@ -748,7 +723,7 @@ router.post('/:expeditionId/complete', authMiddleware, async (req: Authenticated
 
     // Clean up expedition data after completion
     // Delete expedition cards, cats, minigames (results can be kept for history)
-    process.stderr.write(`Starting cleanup for expedition ${expeditionId}\n`);
+    console.log(`Starting cleanup for expedition ${expeditionId}`);
     
     try {
       // Delete expedition cards
@@ -758,9 +733,9 @@ router.post('/:expeditionId/complete', authMiddleware, async (req: Authenticated
         .eq('expedition_id', expeditionId);
       
       if (cardsDeleteError) {
-        process.stderr.write(`❌ Error deleting expedition cards: ${JSON.stringify(cardsDeleteError)}\n`);
+        console.error(`Error deleting expedition cards:`, cardsDeleteError);
       } else {
-        process.stderr.write(`✅ Deleted expedition cards for expedition ${expeditionId}\n`);
+        console.log(`Deleted expedition cards for expedition ${expeditionId}`);
       }
 
       // Delete expedition cats  
@@ -770,9 +745,9 @@ router.post('/:expeditionId/complete', authMiddleware, async (req: Authenticated
         .eq('expedition_id', expeditionId);
       
       if (catsDeleteError) {
-        process.stderr.write(`❌ Error deleting expedition cats: ${JSON.stringify(catsDeleteError)}\n`);
+        console.error(`Error deleting expedition cats:`, catsDeleteError);
       } else {
-        process.stderr.write(`✅ Deleted expedition cats for expedition ${expeditionId}\n`);
+        console.log(`Deleted expedition cats for expedition ${expeditionId}`);
       }
 
       // Delete expedition minigames
@@ -782,13 +757,13 @@ router.post('/:expeditionId/complete', authMiddleware, async (req: Authenticated
         .eq('expedition_id', expeditionId);
       
       if (minigamesDeleteError) {
-        process.stderr.write(`❌ Error deleting expedition minigames: ${JSON.stringify(minigamesDeleteError)}\n`);
+        console.error(`Error deleting expedition minigames:`, minigamesDeleteError);
       } else {
-        process.stderr.write(`✅ Deleted expedition minigames for expedition ${expeditionId}\n`);
+        console.log(`Deleted expedition minigames for expedition ${expeditionId}`);
       }
       
     } catch (cleanupError) {
-      process.stderr.write(`❌ Unexpected error during expedition cleanup: ${cleanupError}\n`);
+      console.error(`Unexpected error during expedition cleanup:`, cleanupError);
       // Don't fail the request, but log the error for debugging
     }
     
@@ -803,11 +778,14 @@ router.post('/:expeditionId/complete', authMiddleware, async (req: Authenticated
       }
     };
     
-    process.stderr.write(`✅ Expedition completion successful, sending response\n`);
+    console.log(`Expedition completion successful, sending response`);
     res.json(response);
+    return;
   } catch (error) {
-    process.stderr.write(`❌ ERROR in expedition completion: ${error}\n`);
-    process.stderr.write(`❌ Error stack: ${error instanceof Error ? error.stack : 'No stack trace'}\n`);
+    console.error(`Error in expedition completion:`, error);
+    if (error instanceof Error && error.stack) {
+      console.error('Stack trace:', error.stack);
+    }
     res.status(500).json({
       success: false,
       error: {
@@ -925,6 +903,7 @@ router.post('/:expeditionId/minigames/:cardPosition/complete', authMiddleware, a
     };
     
     res.json(response);
+    return;
   } catch (error) {
     console.error('Error completing minigame:', error);
     res.status(500).json({

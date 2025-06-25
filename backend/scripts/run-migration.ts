@@ -13,9 +13,10 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
 async function runMigration() {
   try {
-    console.log('Running migration: 20250620000000_add_breed_column.sql');
+    const migrationFile = process.argv[2] || '20250625000000_add_atomic_energy_consumption.sql';
+    console.log(`Running migration: ${migrationFile}`);
     
-    const migrationPath = path.join(__dirname, '../supabase/migrations/20250620000000_add_breed_column.sql');
+    const migrationPath = path.join(__dirname, '../supabase/migrations', migrationFile);
     const migrationSQL = fs.readFileSync(migrationPath, 'utf8');
     
     const { data, error } = await supabase.rpc('exec_sql', { sql: migrationSQL });

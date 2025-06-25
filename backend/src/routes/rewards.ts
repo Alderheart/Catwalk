@@ -62,11 +62,11 @@ router.post('/coins', async (req: AuthenticatedRequest, res: Response): Promise<
       return;
     }
 
-    // Fetch current user data
+    // Fetch current user resource data  
     const { data: userData, error: fetchError } = await supabase
-      .from('users')
+      .from('user_resources')
       .select('*')
-      .eq('id', userId)
+      .eq('user_id', userId)
       .single();
 
     if (fetchError || !userData) {
@@ -85,9 +85,9 @@ router.post('/coins', async (req: AuthenticatedRequest, res: Response): Promise<
 
     // Update user coins
     const { data: updatedUser, error: updateError } = await supabase
-      .from('users')
+      .from('user_resources')
       .update({ coins: newCoins })
-      .eq('id', userId)
+      .eq('user_id', userId)
       .select()
       .single();
 

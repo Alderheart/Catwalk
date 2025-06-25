@@ -29,115 +29,39 @@ export interface PaginationQuery {
 }
 
 export interface Cat {
-  id: string;
-  name: string;
-  gender: 'male' | 'female';
-  moons: number;
-  skill: string;
+  id: string;							// Unique cat identifier
+  name: string;							// In-game name of the cat
+  gender: 'male' | 'female';		
+  moons: number;						// Age of the cat, in months (moons = month)
+  skill: string;					
   trait: string;
   breed?: string;
   level: number;
   experience: number;
-  max_level: number;
-  userId: string;
-  createdAt: Date;
-  updatedAt: Date;
+  max_level: number;					// Maximum level potential a cat can reach
+  userId: string;						// Owner user of the cat
+  createdAt: Date;						// When the cat was first created
+  updatedAt: Date;						// When the cat was last updated
 }
 
 export interface User {
-  id: string;
-  email: string;
-  username: string;
-  coins: number;
-  daily_energy: number;
-  max_daily_energy: number;
-  energy_regen_rate_minutes: number;
-  last_energy_update: Date;
+  id: string;							// Unique user identifier
+  email: string;						// Email of the user
+  username: string;						// Unique username of the user
   createdAt: Date;
   updatedAt: Date;
 }
 
-// Expedition types
-export interface Expedition {
-  id: string;
-  userId: string;
-  status: 'active' | 'cards_drawn' | 'completed';
-  spreadType: 'three-card' | 'horseshoe' | 'four-directions';
+export interface UserResources {
+  id: string;							// Primary key
+  userId: string;						// References User.id
+  coins: number;						// Amount of coin currency
+  daily_energy: number;					// Current energy points
+  max_daily_energy: number;				// Maximum energy capacity
+  energy_regen_rate_minutes: number;		// Minutes between energy regeneration
+  last_energy_update: Date;				// Last time energy was updated
   createdAt: Date;
-  completedAt: Date | null;
+  updatedAt: Date;
 }
 
-export interface ExpeditionCat {
-  id: string;
-  expeditionId: string;
-  catId: string;
-  position: number;
-  createdAt: Date;
-}
-
-// Major Arcana tarot cards (22 cards)
-export type TarotCardName = 
-  | 'The Fool' | 'The Magician' | 'The High Priestess' | 'The Empress' | 'The Emperor'
-  | 'The Hierophant' | 'The Lovers' | 'The Chariot' | 'Strength' | 'The Hermit'
-  | 'Wheel of Fortune' | 'Justice' | 'The Hanged Man' | 'Death' | 'Temperance'
-  | 'The Devil' | 'The Tower' | 'The Star' | 'The Moon' | 'The Sun'
-  | 'Judgement' | 'The World';
-
-export interface ExpeditionCard {
-  id: string;
-  expeditionId: string;
-  cardPosition: number;
-  tarotCardName: TarotCardName;
-  orientation: 'upright' | 'reversed';
-  createdAt: Date;
-}
-
-export interface ExpeditionMinigame {
-  id: string;
-  expeditionId: string;
-  cardPosition: number;
-  tarotCardName: TarotCardName;
-  orientation: 'upright' | 'reversed';
-  minigameType: string | null;
-  status: 'pending' | 'completed';
-  score: number | null;
-  completedAt: Date | null;
-  createdAt: Date;
-}
-
-export interface ExpeditionRewards {
-  coins?: number;
-  experience?: { [catId: string]: number };
-  newCats?: NewCatReward[];
-}
-
-export interface NewCatReward {
-  name: string;
-  gender: 'male' | 'female';
-  moons: number;
-  skill: string;
-  trait: string;
-  breed?: string;
-}
-
-export interface ExpeditionResult {
-  id: string;
-  expeditionId: string;
-  rewards: ExpeditionRewards;
-  narrative: string;
-  createdAt: Date;
-}
-
-export interface CreateExpeditionRequest {
-  spreadType: 'three-card' | 'horseshoe' | 'four-directions';
-  catIds: string[]; // Must be exactly 3 cats
-}
-
-export interface CompleteExpeditionResponse {
-  expedition: Expedition;
-  cards: ExpeditionCard[];
-  minigames: ExpeditionMinigame[];
-  results: ExpeditionResult | null;
-  cats: ExpeditionCat[];
-}
 

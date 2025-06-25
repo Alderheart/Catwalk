@@ -1,7 +1,8 @@
 import { Router, Request, Response } from 'express';
-import { ApiResponse, AuthenticatedRequest, User } from '../types';
+import { ApiResponse, AuthenticatedRequest, UserResources } from '../types';
 import { supabase } from '../lib/supabase';
 import { authMiddleware } from '../middleware/auth';
+import { getUserEnergyStatus, parseInsufficientEnergyError } from '../lib/energyUtils';
 
 const router = Router();
 
@@ -201,9 +202,13 @@ router.post('/refresh', async (req: Request, res: Response) => {
 // Get user profile
 router.get('/profile', authMiddleware, async (req: AuthenticatedRequest, res: Response) => {
   try {
-    const { data: user, error } = await supabase
+    // Fetch user profile with resources using JOIN
+    const { data: userData, error } = await supabase
       .from('users')
-      .select('*')
+      .select(`
+        *,
+        user_resources!inner (*)
+      `)
       .eq('id', req.userId!)
       .single();
     
@@ -211,7 +216,7 @@ router.get('/profile', authMiddleware, async (req: AuthenticatedRequest, res: Re
       throw error;
     }
     
-    if (!user) {
+    if (!userData) {
       res.status(404).json({
         success: false,
         error: {
@@ -221,10 +226,15 @@ router.get('/profile', authMiddleware, async (req: AuthenticatedRequest, res: Re
       });
       return;
     }
-    
-    const response: ApiResponse<User> = {
+
+    // Clean response structure
+    const { user_resources, ...user } = userData;
+    const response: ApiResponse<any> = {
       success: true,
-      data: user
+      data: {
+        ...user,
+        ...user_resources[0]
+      }
     };
     
     res.json(response);
@@ -256,10 +266,10 @@ router.patch('/profile/coins', authMiddleware, async (req: AuthenticatedRequest,
       return;
     }
     
-    const { data: user, error } = await supabase
-      .from('users')
+    const { data: userResources, error } = await supabase
+      .from('user_resources')
       .update({ coins })
-      .eq('id', req.userId!)
+      .eq('user_id', req.userId!)
       .select()
       .single();
     
@@ -267,9 +277,9 @@ router.patch('/profile/coins', authMiddleware, async (req: AuthenticatedRequest,
       throw error;
     }
     
-    const response: ApiResponse<User> = {
+    const response: ApiResponse<UserResources> = {
       success: true,
-      data: user
+      data: userResources
     };
     
     res.json(response);
@@ -288,17 +298,10 @@ router.patch('/profile/coins', authMiddleware, async (req: AuthenticatedRequest,
 // Get user energy status (with auto-regeneration)
 router.get('/profile/energy', authMiddleware, async (req: AuthenticatedRequest, res: Response) => {
   try {
-    const { data: user, error } = await supabase
-      .from('users')
-      .select('daily_energy, max_daily_energy, energy_regen_rate_minutes, last_energy_update')
-      .eq('id', req.userId!)
-      .single();
+    // Use the centralized getUserEnergyStatus function to avoid code duplication
+    const energyStatus = await getUserEnergyStatus(req.userId!);
     
-    if (error) {
-      throw error;
-    }
-    
-    if (!user) {
+    if (!energyStatus) {
       res.status(404).json({
         success: false,
         error: {
@@ -309,54 +312,14 @@ router.get('/profile/energy', authMiddleware, async (req: AuthenticatedRequest, 
       return;
     }
     
-    // Calculate energy regeneration
-    const now = new Date();
-    const lastUpdate = new Date(user.last_energy_update);
-    const timeDiff = now.getTime() - lastUpdate.getTime();
-    const minutesPassed = Math.floor(timeDiff / (1000 * 60));
-    
-    let newEnergy = user.daily_energy;
-    let shouldUpdate = false;
-    
-    if (minutesPassed >= user.energy_regen_rate_minutes && user.daily_energy < user.max_daily_energy) {
-      const energyToAdd = Math.floor(minutesPassed / user.energy_regen_rate_minutes);
-      newEnergy = Math.min(user.daily_energy + energyToAdd, user.max_daily_energy);
-      shouldUpdate = newEnergy > user.daily_energy;
-    }
-    
-    // Update database if energy changed
-    if (shouldUpdate) {
-      const { data: updatedUser, error: updateError } = await supabase
-        .from('users')
-        .update({
-          daily_energy: newEnergy,
-          last_energy_update: now.toISOString()
-        })
-        .eq('id', req.userId!)
-        .select('daily_energy, max_daily_energy, energy_regen_rate_minutes, last_energy_update')
-        .single();
-      
-      if (updateError) {
-        throw updateError;
-      }
-      
-      user.daily_energy = updatedUser.daily_energy;
-      user.last_energy_update = updatedUser.last_energy_update;
-    }
-    
-    // Calculate time until next energy regeneration
-    const nextRegenMinutes = user.daily_energy >= user.max_daily_energy 
-      ? 0 
-      : user.energy_regen_rate_minutes - (minutesPassed % user.energy_regen_rate_minutes);
-    
     const response: ApiResponse = {
       success: true,
       data: {
-        daily_energy: user.daily_energy,
-        max_daily_energy: user.max_daily_energy,
-        energy_regen_rate_minutes: user.energy_regen_rate_minutes,
-        minutes_until_next_energy: nextRegenMinutes,
-        is_at_max: user.daily_energy >= user.max_daily_energy
+        daily_energy: energyStatus.daily_energy,
+        max_daily_energy: energyStatus.max_daily_energy,
+        energy_regen_rate_minutes: energyStatus.energy_regen_rate_minutes,
+        minutes_until_next_energy: energyStatus.minutes_until_next_energy,
+        is_at_max: energyStatus.is_at_max
       }
     };
     
@@ -373,7 +336,7 @@ router.get('/profile/energy', authMiddleware, async (req: AuthenticatedRequest, 
   }
 });
 
-// Consume energy for an action
+// Consume energy for an action (uses atomic operation to prevent race conditions)
 router.post('/profile/energy/consume', authMiddleware, async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { amount = 1 } = req.body;
@@ -389,18 +352,36 @@ router.post('/profile/energy/consume', authMiddleware, async (req: Authenticated
       return;
     }
     
-    // First get and update current energy
-    const { data: user, error } = await supabase
-      .from('users')
-      .select('daily_energy, max_daily_energy, energy_regen_rate_minutes, last_energy_update')
-      .eq('id', req.userId!)
-      .single();
+    // Use atomic energy consumption function to prevent race conditions
+    const now = new Date();
+    const { data, error } = await supabase.rpc('consume_energy_atomic', {
+      p_user_id: req.userId!,
+      p_amount: amount,
+      p_current_time: now.toISOString()
+    });
     
     if (error) {
+      // Check if it's an insufficient energy error
+      if (error.message?.includes('Insufficient energy')) {
+        const currentEnergy = parseInsufficientEnergyError(error.message);
+        res.status(400).json({
+          success: false,
+          error: {
+            code: 'INSUFFICIENT_ENERGY',
+            message: error.message
+          },
+          data: currentEnergy !== undefined ? {
+            current_energy: currentEnergy,
+            required_energy: amount
+          } : undefined
+        });
+        return;
+      }
+      
       throw error;
     }
     
-    if (!user) {
+    if (!data || data.length === 0) {
       res.status(404).json({
         success: false,
         error: {
@@ -411,51 +392,12 @@ router.post('/profile/energy/consume', authMiddleware, async (req: Authenticated
       return;
     }
     
-    // Calculate current energy with regeneration
-    const now = new Date();
-    const lastUpdate = new Date(user.last_energy_update);
-    const timeDiff = now.getTime() - lastUpdate.getTime();
-    const minutesPassed = Math.floor(timeDiff / (1000 * 60));
-    
-    let currentEnergy = user.daily_energy;
-    if (minutesPassed >= user.energy_regen_rate_minutes && user.daily_energy < user.max_daily_energy) {
-      const energyToAdd = Math.floor(minutesPassed / user.energy_regen_rate_minutes);
-      currentEnergy = Math.min(user.daily_energy + energyToAdd, user.max_daily_energy);
-    }
-    
-    // Check if user has enough energy
-    if (currentEnergy < amount) {
-      res.status(400).json({
-        success: false,
-        error: {
-          code: 'INSUFFICIENT_ENERGY',
-          message: `Not enough energy. Required: ${amount}, Available: ${currentEnergy}`
-        }
-      });
-      return;
-    }
-    
-    // Consume energy
-    const newEnergy = currentEnergy - amount;
-    const { data: updatedUser, error: updateError } = await supabase
-      .from('users')
-      .update({
-        daily_energy: newEnergy,
-        last_energy_update: now.toISOString()
-      })
-      .eq('id', req.userId!)
-      .select('daily_energy, max_daily_energy, energy_regen_rate_minutes')
-      .single();
-    
-    if (updateError) {
-      throw updateError;
-    }
-    
+    const result = data[0];
     const response: ApiResponse = {
       success: true,
       data: {
-        daily_energy: updatedUser.daily_energy,
-        max_daily_energy: updatedUser.max_daily_energy,
+        daily_energy: result.new_energy,
+        max_daily_energy: result.max_energy,
         energy_consumed: amount,
         message: `Consumed ${amount} energy`
       }
@@ -520,10 +462,10 @@ router.patch('/profile/energy/settings', authMiddleware, async (req: Authenticat
       return;
     }
     
-    const { data: user, error } = await supabase
-      .from('users')
+    const { data: userResources, error } = await supabase
+      .from('user_resources')
       .update(updates)
-      .eq('id', req.userId!)
+      .eq('user_id', req.userId!)
       .select()
       .single();
     
@@ -531,9 +473,9 @@ router.patch('/profile/energy/settings', authMiddleware, async (req: Authenticat
       throw error;
     }
     
-    const response: ApiResponse<User> = {
+    const response: ApiResponse<UserResources> = {
       success: true,
-      data: user
+      data: userResources
     };
     
     res.json(response);
