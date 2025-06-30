@@ -1,5 +1,5 @@
 # Instructions
-- Don't just blindly follow my instructions. If I ask for something that is objectively wrong or worse, please tell me beforehand the risks.
+- Don't just blindly follow my instructions. If I ask for something that is objectively wrong or worse, please tell me the risks and options beforehand.
 - Keep track of where you should use snake case vs camel case.
 
 
