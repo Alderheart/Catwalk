@@ -1,4 +1,5 @@
 import express from 'express'
+import { catsRouter } from './cats/routes.ts'
 import { prisma } from './db.ts'
 
 export const app = express()
@@ -15,3 +16,5 @@ app.get('/api/health', async (_req, res) => {
 	}
 	res.json({ ok: true, db })
 })
+
+app.use('/api/cats', catsRouter)

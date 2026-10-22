@@ -24,3 +24,18 @@ model Player {
 
   @@map("players")
 }
+
+// Life stage is not stored: it is derived from ageMoons (see src/cats/lifeStage.ts)
+// so the two can never disagree. Gender and breed are plain strings validated in
+// code (src/cats/traits.ts) to keep the schema portable.
+model Cat {
+  id        String   @id @default(cuid())
+  name      String
+  breed     String
+  gender    String
+  ageMoons  Int      @map("age_moons")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("cats")
+}
