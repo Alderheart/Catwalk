@@ -1,0 +1,26 @@
+// Prisma schema. Docs: https://pris.ly/d/prisma-schema
+//
+// Naming: models and fields are camelCase in TypeScript, and mapped to
+// snake_case tables and columns in the database with @map / @@map.
+//
+// Keep this schema portable so moving from SQLite to Postgres later is just a
+// provider swap: stick to String/Int/Boolean/DateTime/Float, use string ids,
+// and avoid raw SQL.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model Player {
+  id        String   @id @default(cuid())
+  username  String   @unique
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("players")
+}

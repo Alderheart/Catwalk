@@ -1,0 +1,11 @@
+node_modules
+dist
+# Keep environment variables out of version control
+.env
+
+# Generated Prisma client (run `npm run db:generate`)
+/src/generated/prisma
+
+# Local SQLite database
+*.db
+*.db-journal
