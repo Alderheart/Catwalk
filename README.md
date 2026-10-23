@@ -40,7 +40,7 @@ Naming: Prisma models and fields are camelCase in code, mapped to snake_case tab
 ### Moving from SQLite to Postgres later
 
 1. In `backend/prisma/schema.prisma`, change `provider = "sqlite"` to `"postgresql"`.
-2. In `backend/src/db.ts`, swap `@prisma/adapter-better-sqlite3` for `@prisma/adapter-pg`.
+2. In `backend/src/platform/db.ts`, swap `@prisma/adapter-better-sqlite3` for `@prisma/adapter-pg`.
 3. Point `DATABASE_URL` at the hosted database (Supabase, Neon, etc.).
 4. Delete `backend/prisma/migrations/` and run `npm run db:migrate -- --name init` once. SQLite migrations are SQL for SQLite and won't run on Postgres, so the history restarts.
 
