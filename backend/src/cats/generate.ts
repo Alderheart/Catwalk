@@ -1,3 +1,6 @@
+// Rolls random cats. Pure logic with no database access, so it can be tested
+// on its own; routes.ts saves the result.
+
 import { AGE_RANGES, LIFE_STAGES, type LifeStage } from './lifeStage.ts'
 import { BREEDS, GENDERS, type Breed, type Gender } from './traits.ts'
 

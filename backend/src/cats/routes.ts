@@ -1,3 +1,6 @@
+// HTTP endpoints for cats under /api/cats. Validates input with the trait lists
+// from traits.ts and returns cats through toDto() so lifeStage is always included.
+
 import { Router } from 'express'
 import { z } from 'zod'
 import { prisma } from '../db.ts'
