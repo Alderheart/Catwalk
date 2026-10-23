@@ -1,9 +1,26 @@
-import { Application, Graphics } from 'pixi.js'
-import { useEffect, useRef } from 'react'
+// Mounts the Pixi canvas that fills its parent and runs the camp scene in it.
+// Cats come in as props; the scene reports the focused cat back through onFocus.
 
-// Mounts a Pixi canvas that fills its parent. Game scenes will draw into this.
-export function PixiStage() {
+import { Application } from 'pixi.js'
+import { useEffect, useRef } from 'react'
+import type { Cat } from '../api/cats.ts'
+import { CampScene, type CatFocus } from './CampScene.ts'
+
+type Props = {
+	cats: Cat[]
+	onFocus: (focus: CatFocus) => void
+}
+
+export function PixiStage({ cats, onFocus }: Props) {
 	const hostRef = useRef<HTMLDivElement>(null)
+	const sceneRef = useRef<CampScene | null>(null)
+	// Read the latest props from inside the async init without restarting Pixi
+	const catsRef = useRef(cats)
+	const onFocusRef = useRef(onFocus)
+	useEffect(() => {
+		catsRef.current = cats
+		onFocusRef.current = onFocus
+	})
 
 	useEffect(() => {
 		const host = hostRef.current
@@ -28,23 +45,22 @@ export function PixiStage() {
 					return
 				}
 				host.appendChild(app.canvas)
-
-				const ball = new Graphics().circle(0, 0, 24).fill(0xf59e0b)
-				app.stage.addChild(ball)
-
-				let t = 0
-				app.ticker.add((ticker) => {
-					t += ticker.deltaTime / 60
-					ball.x = app.screen.width / 2 + Math.cos(t) * app.screen.width * 0.3
-					ball.y = app.screen.height / 2 + Math.sin(t * 2) * app.screen.height * 0.15
-				})
+				const scene = new CampScene(app, (focus) => onFocusRef.current(focus))
+				scene.setCats(catsRef.current)
+				sceneRef.current = scene
 			})
 
 		return () => {
 			destroyed = true
+			sceneRef.current?.destroy()
+			sceneRef.current = null
 			if (ready) app.destroy(true)
 		}
 	}, [])
+
+	useEffect(() => {
+		sceneRef.current?.setCats(cats)
+	}, [cats])
 
 	return <div ref={hostRef} className="absolute inset-0" />
 }
