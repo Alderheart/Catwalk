@@ -59,8 +59,11 @@ model InventoryItem {
 }
 
 // Life stage and level are not stored: they are derived from ageMoons and xp
-// (see src/cats/lifeStage.ts and src/progression/level.ts) so they can never disagree. Gender and breed are plain strings validated in
-// code (src/cats/traits.ts) to keep the schema portable.
+// (see src/game/cats/lifeStage.ts and src/game/progression/level.ts) so they
+// can never disagree. Gender and breed are plain strings validated in code
+// (src/game/cats/traits.ts) to keep the schema portable. Gameplay stats are
+// stored integers; their defaults must match DEFAULT_STATS in
+// src/game/cats/stats.ts, and health/energy never exceed their maximums.
 model Cat {
   id          String         @id @default(cuid())
   name        String
@@ -68,6 +71,13 @@ model Cat {
   gender      String
   ageMoons    Int            @map("age_moons")
   xp          Int            @default(0)
+  health      Int            @default(100)
+  maxHealth   Int            @default(100) @map("max_health")
+  energy      Int            @default(100)
+  maxEnergy   Int            @default(100) @map("max_energy")
+  attack      Int            @default(10)
+  defense     Int            @default(10)
+  speed       Int            @default(10)
   personality Personality?
   patrols     PatrolMember[]
   createdAt   DateTime       @default(now()) @map("created_at")

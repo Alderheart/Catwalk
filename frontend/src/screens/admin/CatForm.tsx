@@ -3,7 +3,7 @@
 // validates whatever is sent, so this form only collects values.
 
 import { useState, type FormEvent, type ReactNode } from 'react'
-import type { Cat, CatFields, CatTraitOptions, Gender } from '../../api/cats.ts'
+import type { Cat, CatFields, CatStats, CatTraitOptions, Gender, StatKey } from '../../api/cats.ts'
 
 type Props = {
 	options: CatTraitOptions
@@ -17,6 +17,23 @@ type Props = {
 
 const inputClass = 'min-h-11 w-full rounded-lg bg-stone-800 px-3 text-base'
 
+const STAT_LABELS: Record<StatKey, string> = {
+	health: 'Health',
+	maxHealth: 'Max health',
+	energy: 'Energy',
+	maxEnergy: 'Max energy',
+	attack: 'Attack',
+	defense: 'Defense',
+	speed: 'Speed',
+}
+
+// Kept as text while typing, like the other number fields
+type StatText = Record<StatKey, string>
+
+function statsToText(keys: StatKey[], stats: CatStats): StatText {
+	return Object.fromEntries(keys.map((key) => [key, String(stats[key])])) as StatText
+}
+
 export function CatForm({ options, cat, submitLabel, pending, onSubmit, onCancel }: Props) {
 	const [traitA, traitB] = options.personalityTraits
 	const [name, setName] = useState(cat?.name ?? '')
@@ -25,6 +42,9 @@ export function CatForm({ options, cat, submitLabel, pending, onSubmit, onCancel
 	// Numbers are kept as text while typing, so the field can be emptied
 	const [ageMoons, setAgeMoons] = useState(String(cat?.ageMoons ?? options.lifeStages[2]?.minAgeMoons ?? 12))
 	const [xp, setXp] = useState(String(cat?.xp ?? 0))
+	// A new cat starts from the server's defaults rather than a roll, so what is
+	// shown is what gets saved
+	const [stats, setStats] = useState(() => statsToText(options.statKeys, cat ?? options.defaultStats))
 	// Cats made before personalities existed get one when saved
 	const [mainTrait, setMainTrait] = useState(cat?.personality?.mainTrait ?? traitA)
 	const [sideTrait, setSideTrait] = useState(cat?.personality?.sideTrait ?? traitB)
@@ -43,6 +63,7 @@ export function CatForm({ options, cat, submitLabel, pending, onSubmit, onCancel
 			gender,
 			ageMoons: Number(ageMoons),
 			xp: Number(xp),
+			...(Object.fromEntries(options.statKeys.map((key) => [key, Number(stats[key])])) as CatStats),
 			personality: { mainTrait, sideTrait },
 		})
 	}
@@ -105,6 +126,23 @@ export function CatForm({ options, cat, submitLabel, pending, onSubmit, onCancel
 					className={inputClass}
 				/>
 			</Field>
+			{/* Health and energy pair with their maximums; the server refuses a value above its max */}
+			<div className="grid grid-cols-2 gap-3">
+				{options.statKeys.map((key) => (
+					<Field key={key} label={STAT_LABELS[key]}>
+						<input
+							type="number"
+							inputMode="numeric"
+							min={0}
+							max={key === 'health' ? stats.maxHealth : key === 'energy' ? stats.maxEnergy : options.maxStat}
+							value={stats[key]}
+							onChange={(e) => setStats((s) => ({ ...s, [key]: e.target.value }))}
+							required
+							className={inputClass}
+						/>
+					</Field>
+				))}
+			</div>
 			<div className="grid grid-cols-2 gap-3">
 				<Field label="Main trait">
 					<select value={mainTrait} onChange={(e) => changeMainTrait(e.target.value)} className={inputClass}>
