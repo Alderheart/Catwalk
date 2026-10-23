@@ -1,5 +1,5 @@
 // One patrol that is out of camp: who is on it, a countdown, and the buttons
-// to speed it up with a minigame or collect it once it is back.
+// to speed it up with minigames or collect it once it is back.
 
 import type { Patrol, PatrolType } from '../api/patrols.ts'
 
@@ -62,7 +62,7 @@ export function PatrolCard({ patrol, now, busy, onPlay, onCollect }: Props) {
 						disabled={busy || patrol.boostsLeft === 0}
 						className="min-h-11 flex-1 rounded-lg bg-emerald-700 font-semibold active:bg-emerald-800 disabled:opacity-50"
 					>
-						{patrol.boostsLeft > 0 ? `Speed up: play a minigame (${patrol.boostsLeft} left)` : 'No minigames left'}
+						{patrol.boostsLeft > 0 ? `Speed up: play minigames (${patrol.boostsLeft} boosts left)` : 'No boosts left'}
 					</button>
 				)}
 			</div>

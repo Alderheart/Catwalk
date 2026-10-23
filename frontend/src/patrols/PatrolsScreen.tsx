@@ -1,5 +1,5 @@
 // The patrols tab: patrols that are out, a builder for a new hunting patrol,
-// the minigame that speeds one up, and the report when one comes home. Every
+// the hand of minigame cards that speeds one up, and the report when one comes home. Every
 // outcome (timing, rewards) comes from the backend; this only shows it.
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
@@ -13,9 +13,11 @@ import {
 	type Patrol,
 	type PatrolRewards,
 } from '../api/patrols.ts'
-import { PounceGame } from '../minigames/PounceGame.tsx'
+import { MinigameSession } from '../minigames/MinigameSession.tsx'
+import type { CardResult } from '../minigames/types.ts'
 import { PatrolBuilder } from './PatrolBuilder.tsx'
 import { PatrolCard } from './PatrolCard.tsx'
+import { huntingDeck, patrolHandSize } from './patrolDeck.ts'
 import { PatrolReport } from './PatrolReport.tsx'
 
 type Props = {
@@ -29,7 +31,7 @@ export function PatrolsScreen({ cats, onRewards }: Props) {
 	const [error, setError] = useState<string | null>(null)
 	const [building, setBuilding] = useState(false)
 	const [pending, setPending] = useState(false)
-	const [minigameFor, setMinigameFor] = useState<string | null>(null)
+	const [minigameFor, setMinigameFor] = useState<Patrol | null>(null)
 	const [report, setReport] = useState<PatrolRewards | null>(null)
 	const [now, setNow] = useState(() => Date.now())
 
@@ -75,12 +77,18 @@ export function PatrolsScreen({ cats, onRewards }: Props) {
 			.finally(() => setPending(false))
 	}
 
-	const onMinigameWin = useCallback(() => {
-		if (!minigameFor) return
-		boostPatrol(minigameFor)
-			.then((patrol) => setPatrols((prev) => (prev ?? []).map((p) => (p.id === patrol.id ? patrol : p))))
-			.catch((err) => setError(errorMessage(err, 'Could not speed up the patrol')))
-	}, [minigameFor])
+	const onMinigamesEnd = useCallback(
+		(results: CardResult[]) => {
+			const patrolId = minigameFor?.id
+			setMinigameFor(null)
+			const wins = results.filter((r) => r.won).length
+			if (!patrolId || wins === 0) return
+			boostPatrol(patrolId, wins)
+				.then((patrol) => setPatrols((prev) => (prev ?? []).map((p) => (p.id === patrol.id ? patrol : p))))
+				.catch((err) => setError(errorMessage(err, 'Could not speed up the patrol')))
+		},
+		[minigameFor],
+	)
 
 	return (
 		<section className="flex flex-1 flex-col gap-3 overflow-y-auto p-4">
@@ -120,7 +128,7 @@ export function PatrolsScreen({ cats, onRewards }: Props) {
 					patrol={patrol}
 					now={now}
 					busy={pending}
-					onPlay={() => setMinigameFor(patrol.id)}
+					onPlay={() => setMinigameFor(patrol)}
 					onCollect={() => collect(patrol.id)}
 				/>
 			))}
@@ -131,7 +139,14 @@ export function PatrolsScreen({ cats, onRewards }: Props) {
 				</p>
 			)}
 
-			{minigameFor && <PounceGame onWin={onMinigameWin} onClose={() => setMinigameFor(null)} />}
+			{minigameFor && (
+				<MinigameSession
+					title="Hunting patrol"
+					deck={huntingDeck}
+					handSize={patrolHandSize(minigameFor)}
+					onEnd={onMinigamesEnd}
+				/>
+			)}
 			{report && <PatrolReport rewards={report} onDone={() => setReport(null)} />}
 		</section>
 	)

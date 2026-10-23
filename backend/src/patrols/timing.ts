@@ -10,8 +10,8 @@ const BOOST_SHARE = 1 / 6
 export const MAX_BOOSTS = 4
 
 // The client reports minigame wins, so the server can't check them. These two
-// limits cap what a faked win can gain: at most MAX_BOOSTS, and no faster than
-// one minigame could really be played
+// limits cap what a faked win can gain: at most MAX_BOOSTS in total, and no
+// more than one report (one hand of cards) per cooldown
 export const BOOST_COOLDOWN_MS = 5_000
 
 export function patrolEndsAt(startedAt: Date): Date {
@@ -35,7 +35,7 @@ export function boostBlocker(patrol: BoostState, now: Date): string | null {
 }
 
 // Never moves the end time into the past, so a boosted patrol is simply ready
-export function boostedEndsAt(endsAt: Date, now: Date): Date {
-	const cut = PATROL_DURATION_MS * BOOST_SHARE
+export function boostedEndsAt(endsAt: Date, now: Date, boosts = 1): Date {
+	const cut = PATROL_DURATION_MS * BOOST_SHARE * boosts
 	return new Date(Math.max(now.getTime(), endsAt.getTime() - cut))
 }
