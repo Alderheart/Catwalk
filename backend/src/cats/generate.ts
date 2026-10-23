@@ -2,6 +2,7 @@
 // on its own; routes.ts saves the result.
 
 import { AGE_RANGES, LIFE_STAGES, type LifeStage } from './lifeStage.ts'
+import { generatePersonality, type Personality } from './personality.ts'
 import { BREEDS, GENDERS, type Breed, type Gender } from './traits.ts'
 
 export type CatTraits = {
@@ -9,6 +10,7 @@ export type CatTraits = {
 	breed: Breed
 	gender: Gender
 	ageMoons: number
+	personality: Personality
 }
 
 const NAMES = [
@@ -37,5 +39,6 @@ export function generateCat(options: { lifeStage?: LifeStage; rng?: Rng } = {}):
 		breed: pick(BREEDS, rng),
 		gender: pick(GENDERS, rng),
 		ageMoons: randomInt(minAge, maxAge, rng),
+		personality: generatePersonality(rng),
 	}
 }

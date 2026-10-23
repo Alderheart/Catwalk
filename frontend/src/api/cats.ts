@@ -5,6 +5,13 @@ import { api } from './client.ts'
 export type LifeStage = 'kit' | 'adolescent' | 'adult' | 'elder'
 export type Gender = 'tom' | 'she-cat' | 'nonbinary'
 
+// Trait values come from backend/src/cats/personality.ts. Kept as string here
+// because the UI only displays them
+export type Personality = {
+	mainTrait: string
+	sideTrait: string
+}
+
 export type Cat = {
 	id: string
 	name: string
@@ -12,6 +19,8 @@ export type Cat = {
 	gender: Gender
 	ageMoons: number
 	lifeStage: LifeStage
+	// null only for cats made before personalities existed
+	personality: Personality | null
 	createdAt: string
 	updatedAt: string
 }
