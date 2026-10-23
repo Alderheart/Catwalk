@@ -14,3 +14,4 @@ One short file per decision that shapes the codebase and would be costly to reve
 - [0005 Deploy to a shared VPS with Caddy and systemd](0005-vps-deploy.md)
 - [0006 One implicit player until accounts exist](0006-single-implicit-player.md)
 - [0007 Minigames are cards played from a deck](0007-minigame-card-decks.md)
+- [0008 Folders split game domains from plumbing](0008-folder-layout.md)

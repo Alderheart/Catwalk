@@ -1,7 +1,7 @@
 import { api } from './client.ts'
 import type { Camp } from './camp.ts'
 
-// Mirrors the backend patrol responses (backend/src/patrols). Frontend and
+// Mirrors the backend patrol responses (backend/src/game/patrols). Frontend and
 // backend share no code, so keep these in sync by hand.
 export type PatrolType = 'hunting'
 export type PatrolRole = 'leader' | 'member'

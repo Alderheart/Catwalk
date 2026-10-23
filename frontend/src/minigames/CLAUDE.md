@@ -17,8 +17,8 @@ Every minigame is a card, and every feature plays them the same way (see `docs/d
 ## Rules
 - A card's `Game` fills the space it's given, calls `onFinish(won)` exactly once, and knows nothing about decks, other cards, or rewards
 - Don't add a different flow for one feature. Configure it through the deck and hand size instead, or extend `MinigameSession` for everyone
-- Decks live with the feature that plays them (for example `src/patrols/patrolDeck.ts`), not here
-- The client only reports results. What a win is worth is decided by the backend, which can't verify wins, so it caps them (see `backend/src/patrols/timing.ts`)
+- Decks live with the feature that plays them (for example `src/screens/patrols/patrolDeck.ts`), not here
+- The client only reports results. What a win is worth is decided by the backend, which can't verify wins, so it caps them (see `backend/src/game/patrols/timing.ts`)
 
 ## Adding a card
 Make `<card>/<Name>Game.tsx` taking `MinigameProps` (plus a Pixi scene if it needs one, via `usePixiApp`), add a `MinigameCard` to `cards.ts`, and put it in the decks where it is valid.
