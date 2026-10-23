@@ -1,31 +1,42 @@
 // App shell: a phone-sized column that respects safe areas, showing one screen
-// at a time (camp or patrols) with a tab bar at the bottom.
+// at a time (camp, patrols or inventory) with a tab bar at the bottom. Holds
+// the cats and camp level because more than one screen shows them.
 
 import { useCallback, useEffect, useState } from 'react'
+import { getCamp, type Camp } from './api/camp.ts'
 import { generateRandomCat, listCats, type Cat } from './api/cats.ts'
 import type { CatFocus } from './game/CampScene.ts'
 import { CatTooltip } from './game/CatTooltip.tsx'
 import { PixiStage } from './game/PixiStage.tsx'
+import { InventoryScreen } from './inventory/InventoryScreen.tsx'
 import { PatrolsScreen } from './patrols/PatrolsScreen.tsx'
 
-type Screen = 'camp' | 'patrols'
+type Screen = 'camp' | 'patrols' | 'inventory'
 
 const SCREENS: { id: Screen; label: string }[] = [
 	{ id: 'camp', label: 'Camp' },
 	{ id: 'patrols', label: 'Patrols' },
+	{ id: 'inventory', label: 'Inventory' },
 ]
 
 function App() {
 	const [cats, setCats] = useState<Cat[]>([])
+	const [camp, setCamp] = useState<Camp | null>(null)
 	const [error, setError] = useState<string | null>(null)
 	const [focus, setFocus] = useState<CatFocus>(null)
 	const [screen, setScreen] = useState<Screen>('camp')
 
-	useEffect(() => {
-		listCats()
-			.then(setCats)
+	// Patrol rewards change cat and camp xp, so the patrols screen calls this too
+	const refresh = useCallback(() => {
+		Promise.all([listCats(), getCamp()])
+			.then(([cats, camp]) => {
+				setCats(cats)
+				setCamp(camp)
+			})
 			.catch(() => setError('Could not reach the backend'))
 	}, [])
+
+	useEffect(refresh, [refresh])
 
 	// Dev helper until cats can be earned: asks the backend to roll a cat
 	const addCat = useCallback(() => {
@@ -42,7 +53,8 @@ function App() {
 						<div>
 							<h1 className="text-2xl font-bold">Camp</h1>
 							<p className="text-sm text-stone-400">
-								{error ?? `${cats.length} ${cats.length === 1 ? 'cat' : 'cats'}`}
+								{error ??
+									`${cats.length} ${cats.length === 1 ? 'cat' : 'cats'}${camp ? ` · Level ${camp.level} · ${camp.xp}/${camp.nextLevelXp} xp` : ''}`}
 							</p>
 						</div>
 						<button
@@ -58,8 +70,10 @@ function App() {
 						{focus && <CatTooltip cat={focus.cat} rect={focus.rect} stageWidth={focus.stageWidth} />}
 					</section>
 				</>
+			) : screen === 'patrols' ? (
+				<PatrolsScreen cats={cats} onRewards={refresh} />
 			) : (
-				<PatrolsScreen />
+				<InventoryScreen />
 			)}
 			<nav className="z-10 flex border-t border-stone-700">
 				{SCREENS.map(({ id, label }) => (

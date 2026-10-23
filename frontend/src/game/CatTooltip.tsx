@@ -32,7 +32,9 @@ export function CatTooltip({ cat, rect, stageWidth }: Props) {
 			className="pointer-events-none absolute z-20 rounded-lg bg-stone-800/95 p-3 text-sm shadow-lg ring-1 ring-stone-600"
 			style={style}
 		>
-			<p className="text-base font-bold">{cat.name}</p>
+			<p className="text-base font-bold">
+				{cat.name} <span className="text-sm font-normal text-amber-500">Lv {cat.level}</span>
+			</p>
 			<p className="text-stone-300">{cat.breed}</p>
 			<p className="text-stone-300">
 				{cat.gender} · <span className="capitalize">{cat.lifeStage}</span>

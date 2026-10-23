@@ -19,6 +19,11 @@ export type Cat = {
 	gender: Gender
 	ageMoons: number
 	lifeStage: LifeStage
+	xp: number
+	// Derived from xp on the server (backend/src/progression/level.ts)
+	level: number
+	levelStartXp: number
+	nextLevelXp: number
 	// null only for cats made before personalities existed
 	personality: Personality | null
 	createdAt: string
