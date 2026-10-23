@@ -5,7 +5,7 @@ Sending groups of cats out of camp, in real time, and what they bring back. Only
 ## How a patrol works
 - A patrol has one leader and up to three members (`MAX_PATROL_MEMBERS` in `types.ts`). Kits can't go, and a cat can be on only one active patrol
 - It runs for `PATROL_DURATION_MS` (`timing.ts`, 30 minutes, or `HUNTING_PATROL_MINUTES` from the env for testing)
-- Each minigame the player wins calls `POST /:id/boost`, which takes a sixth of the full duration off. At most `MAX_BOOSTS` per patrol, at least `BOOST_COOLDOWN_MS` apart
+- The player speeds a patrol up by playing a hand of minigame cards (`frontend/src/minigames/`). When the hand is over the client calls `POST /:id/boost` once with `{ wins }`, and each win takes a sixth of the full duration off. At most `MAX_BOOSTS` per patrol, and boost calls at least `BOOST_COOLDOWN_MS` apart
 - Once `endsAt` passes, `POST /:id/collect` rolls the rewards and marks it `completed`. Rewards are cat xp, camp xp, and prey added to the player's inventory
 
 ## Rules

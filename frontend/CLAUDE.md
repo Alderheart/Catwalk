@@ -14,7 +14,7 @@ Vite + React 19 + TypeScript. Tailwind 4 for UI, PixiJS 8 for game scenes. Linte
 - `src/game/CatTooltip.tsx`: React overlay for cat info, positioned from the rect the scene reports
 - `src/game/usePixiApp.ts`: the Pixi lifecycle hook every canvas uses
 - `src/patrols/`: the patrols tab (builder, countdown cards, rewards report). Rules live in `backend/src/patrols/CLAUDE.md`
-- `src/minigames/`: minigames that speed patrols up. A Pixi scene for the game world plus a React wrapper for the HUD; a win only asks the backend for the boost
+- `src/minigames/`: the minigame card system. Every minigame is a card, played through `MinigameSession` (shuffle, draw, play one at a time). Rules in `src/minigames/CLAUDE.md`
 - `src/inventory/`: the inventory tab, read only
 
 ## Patterns

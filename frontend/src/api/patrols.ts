@@ -30,7 +30,8 @@ export const listPatrols = () => api<Patrol[]>('/patrols')
 export const startPatrol = (body: { type: PatrolType; leaderId: string; memberIds: string[] }) =>
 	api<Patrol>('/patrols', { method: 'POST', body: JSON.stringify(body) })
 
-// Call only after the player wins a minigame
-export const boostPatrol = (id: string) => api<Patrol>(`/patrols/${id}/boost`, { method: 'POST' })
+// Call once a hand of minigame cards is over, with how many were won (at least 1)
+export const boostPatrol = (id: string, wins: number) =>
+	api<Patrol>(`/patrols/${id}/boost`, { method: 'POST', body: JSON.stringify({ wins }) })
 
 export const collectPatrol = (id: string) => api<PatrolRewards>(`/patrols/${id}/collect`, { method: 'POST' })

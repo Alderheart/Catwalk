@@ -114,9 +114,19 @@ patrolsRouter.post('/', async (req, res) => {
 	}
 })
 
-// Called after the player wins a minigame. Takes time off the patrol, within
-// the limits in timing.ts
+const boostBody = z.object({
+	wins: z.number().int().min(1).max(MAX_BOOSTS).default(1),
+})
+
+// Called once a hand of minigame cards is over, with how many the player won.
+// Reported together rather than per card, because a hand is played faster than
+// the cooldown in timing.ts allows. Takes time off within those limits
 patrolsRouter.post('/:id/boost', async (req, res) => {
+	const parsed = boostBody.safeParse(req.body ?? {})
+	if (!parsed.success) {
+		res.status(400).json({ error: z.prettifyError(parsed.error) })
+		return
+	}
 	const player = await getCurrentPlayer()
 	const now = new Date()
 	try {
@@ -127,12 +137,13 @@ patrolsRouter.post('/:id/boost', async (req, res) => {
 			if (!found) throw new PatrolError(404, 'Patrol not found')
 			const blocker = boostBlocker(found, now)
 			if (blocker) throw new PatrolError(409, blocker)
+			const boosts = Math.min(parsed.data.wins, MAX_BOOSTS - found.boostCount)
 			return tx.patrol.update({
 				where: { id: found.id },
 				include: withMembers,
 				data: {
-					endsAt: boostedEndsAt(found.endsAt, now),
-					boostCount: { increment: 1 },
+					endsAt: boostedEndsAt(found.endsAt, now, boosts),
+					boostCount: { increment: boosts },
 					lastBoostAt: now,
 				},
 			})
