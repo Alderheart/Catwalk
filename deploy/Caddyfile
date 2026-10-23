@@ -1,0 +1,21 @@
+# Caddy site for Catwalk. Serves the built frontend and proxies /api to the
+# backend, which only listens on 127.0.0.1. Caddy gets HTTPS certificates
+# automatically once the DNS record points at this server.
+# Copy to /etc/caddy/Caddyfile and replace cats.example.com with your subdomain there.
+
+cats.example.com {
+	encode zstd gzip
+
+	handle /api/* {
+		reverse_proxy 127.0.0.1:3000
+	}
+
+	handle {
+		root * /opt/catwalk/frontend/dist
+		# Vite puts hashed files in /assets, so they never change and can be cached forever
+		header /assets/* Cache-Control "public, max-age=31536000, immutable"
+		# Unknown paths fall back to index.html so client-side routes still load
+		try_files {path} /index.html
+		file_server
+	}
+}

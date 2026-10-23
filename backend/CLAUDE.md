@@ -9,7 +9,7 @@ Node + Express 5 + TypeScript, Prisma 7 on SQLite (via the better-sqlite3 adapte
 - `npm run db:studio`: browse the database
 
 ## Layout
-- `src/index.ts`: loads env and starts the server. Nothing else
+- `src/index.ts`: loads env and starts the server on `HOST`/`PORT`. Nothing else. Production binds `127.0.0.1` behind Caddy (see `docs/deploy.md`)
 - `src/app.ts`: builds the Express app and mounts routers under `/api`
 - `src/db.ts`: the only file that knows which database driver we use
 - `src/<domain>/`: one folder per game domain (e.g. `cats/`) holding its routes, rules and generators
