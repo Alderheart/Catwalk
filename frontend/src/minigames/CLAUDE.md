@@ -11,7 +11,7 @@ Every minigame is a card, and every feature plays them the same way (see `docs/d
 - `types.ts`: `MinigameCard`, `MinigameProps`, `DeckEntry`, `CardResult`
 - `deck.ts`: building, shuffling and drawing, as plain functions with an injectable `rng`
 - `MinigameSession.tsx`: the only place the flow lives. Header, hand strip, ready/result/summary screens
-- `cards.ts`: every card in the game
+- `cards.ts`: every card in the game, and `ALL_CARDS`, the list the admin panel launches from
 - `<card>/`: one folder per card, holding its React component and Pixi scene (`pounce/` is the reference)
 
 ## Rules
@@ -21,4 +21,4 @@ Every minigame is a card, and every feature plays them the same way (see `docs/d
 - The client only reports results. What a win is worth is decided by the backend, which can't verify wins, so it caps them (see `backend/src/game/patrols/timing.ts`)
 
 ## Adding a card
-Make `<card>/<Name>Game.tsx` taking `MinigameProps` (plus a Pixi scene if it needs one, via `usePixiApp`), add a `MinigameCard` to `cards.ts`, and put it in the decks where it is valid.
+Make `<card>/<Name>Game.tsx` taking `MinigameProps` (plus a Pixi scene if it needs one, via `usePixiApp`), add a `MinigameCard` to `cards.ts` and to `ALL_CARDS` (so it can be tested alone from the admin panel), and put it in the decks where it is valid.

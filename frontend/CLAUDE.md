@@ -10,9 +10,10 @@ Vite + React 19 + TypeScript. Tailwind 4 for UI, PixiJS 8 for game scenes. Linte
 ## Layout
 Folders follow `docs/decisions/0008-folder-layout.md`. Every file belongs to exactly one of these:
 - `src/app/`: the shell. `App.tsx` (safe areas, which screen is showing, the cats and camp shared between screens) and `TabBar.tsx`
-- `src/screens/<screen>/`: one folder per page of the game (`camp/`, `patrols/`, `inventory/`), holding its `<Name>Screen.tsx` and everything only that screen uses, Pixi scenes and minigame decks included
+- `src/screens/<screen>/`: one folder per page of the game (`camp/`, `patrols/`, `inventory/`, `admin/`), holding its `<Name>Screen.tsx` and everything only that screen uses, Pixi scenes and minigame decks included
   - `camp/`: `CampStage.tsx` mounts the canvas, `CampScene.ts` draws the camp, `campLayout.ts` holds the layout math, `CatTooltip.tsx` is the React overlay
   - `patrols/`: builder, countdown cards, rewards report and `patrolDeck.ts`. Rules live in `backend/src/game/patrols/CLAUDE.md`
+  - `admin/`: testing tools opened from the camp header, with no tab of its own. Adds random or custom cats, edits any cat field, and plays any single minigame card without rewards. New dev-only controls go here, not on game screens
 - `src/minigames/`: the card system and one folder per card. Rules in `src/minigames/CLAUDE.md`
 - `src/api/`: typed wrappers around backend endpoints, one file per backend domain. `client.ts` is the shared fetch helper
 - `src/pixi/`: canvas plumbing shared by every Pixi view (`usePixiApp.ts`). No game drawing here

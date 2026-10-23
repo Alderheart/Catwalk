@@ -13,10 +13,10 @@ type Props = {
 	cats: Cat[]
 	camp: Camp | null
 	error: string | null
-	onAddCat: () => void
+	onOpenAdmin: () => void
 }
 
-export function CampScreen({ cats, camp, error, onAddCat }: Props) {
+export function CampScreen({ cats, camp, error, onOpenAdmin }: Props) {
 	const [focus, setFocus] = useState<CatFocus>(null)
 
 	return (
@@ -31,10 +31,10 @@ export function CampScreen({ cats, camp, error, onAddCat }: Props) {
 				</div>
 				<button
 					type="button"
-					onClick={onAddCat}
-					className="min-h-11 rounded-lg bg-amber-600 px-4 font-semibold active:bg-amber-700"
+					onClick={onOpenAdmin}
+					className="min-h-11 rounded-lg bg-stone-700 px-4 font-semibold active:bg-stone-600"
 				>
-					Add cat
+					Admin
 				</button>
 			</header>
 			<section className="relative flex-1">

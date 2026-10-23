@@ -1,9 +1,11 @@
 // The bottom tab bar. Adding a screen means adding it to SCREENS here and
-// rendering it in App.tsx.
+// rendering it in App.tsx. Screens without a tab (like admin) are opened from
+// another screen and leave every tab unselected.
 
-export type Screen = 'camp' | 'patrols' | 'inventory'
+export type Screen = 'camp' | 'patrols' | 'inventory' | 'admin'
+type TabScreen = Exclude<Screen, 'admin'>
 
-const SCREENS: { id: Screen; label: string }[] = [
+const SCREENS: { id: TabScreen; label: string }[] = [
 	{ id: 'camp', label: 'Camp' },
 	{ id: 'patrols', label: 'Patrols' },
 	{ id: 'inventory', label: 'Inventory' },
