@@ -36,3 +36,33 @@ export const getCat = (id: string) => api<Cat>(`/cats/${id}`)
 
 export const generateRandomCat = (lifeStage?: LifeStage) =>
 	api<Cat>('/cats/random', { method: 'POST', body: JSON.stringify({ lifeStage }) })
+
+// The allowed values for every editable field, from GET /cats/traits. Fetched
+// rather than copied so the admin panel's pickers match what the server accepts
+export type CatTraitOptions = {
+	breeds: string[]
+	genders: Gender[]
+	personalityTraits: string[]
+	// The first moon of each life stage, oldest last
+	lifeStages: { stage: LifeStage; minAgeMoons: number }[]
+	maxAgeMoons: number
+	maxXp: number
+}
+
+// What the admin panel can set on a cat. On create, personality is rolled by
+// the server when left out and xp defaults to 0
+export type CatFields = {
+	name: string
+	breed: string
+	gender: Gender
+	ageMoons: number
+	xp: number
+	personality: Personality
+}
+
+export const getCatTraits = () => api<CatTraitOptions>('/cats/traits')
+
+export const createCat = (fields: CatFields) => api<Cat>('/cats', { method: 'POST', body: JSON.stringify(fields) })
+
+export const updateCat = (id: string, changes: Partial<CatFields>) =>
+	api<Cat>(`/cats/${id}`, { method: 'PATCH', body: JSON.stringify(changes) })

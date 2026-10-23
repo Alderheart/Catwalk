@@ -12,3 +12,7 @@ export const pounceCard: MinigameCard = {
 	lostText: 'It got away.',
 	Game: PounceGame,
 }
+
+// Every card, in the order the admin panel lists them. Add new cards here too,
+// so they can be launched on their own for testing
+export const ALL_CARDS: readonly MinigameCard[] = [pounceCard]

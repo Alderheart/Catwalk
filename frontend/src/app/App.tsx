@@ -4,7 +4,8 @@
 
 import { useCallback, useEffect, useState } from 'react'
 import { getCamp, type Camp } from '../api/camp.ts'
-import { generateRandomCat, listCats, type Cat } from '../api/cats.ts'
+import { listCats, type Cat } from '../api/cats.ts'
+import { AdminScreen } from '../screens/admin/AdminScreen.tsx'
 import { CampScreen } from '../screens/camp/CampScreen.tsx'
 import { InventoryScreen } from '../screens/inventory/InventoryScreen.tsx'
 import { PatrolsScreen } from '../screens/patrols/PatrolsScreen.tsx'
@@ -16,7 +17,7 @@ function App() {
 	const [error, setError] = useState<string | null>(null)
 	const [screen, setScreen] = useState<Screen>('camp')
 
-	// Patrol rewards change cat and camp xp, so the patrols screen calls this too
+	// Patrol rewards and admin edits change cats and camp xp, so those screens call this too
 	const refresh = useCallback(() => {
 		Promise.all([listCats(), getCamp()])
 			.then(([cats, camp]) => {
@@ -28,17 +29,12 @@ function App() {
 
 	useEffect(refresh, [refresh])
 
-	// Dev helper until cats can be earned: asks the backend to roll a cat
-	const addCat = useCallback(() => {
-		generateRandomCat()
-			.then((cat) => setCats((prev) => [...prev, cat]))
-			.catch(() => setError('Could not add a cat'))
-	}, [])
-
 	return (
 		<main className="relative mx-auto flex h-dvh max-w-md flex-col overflow-hidden pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]">
 			{screen === 'camp' ? (
-				<CampScreen cats={cats} camp={camp} error={error} onAddCat={addCat} />
+				<CampScreen cats={cats} camp={camp} error={error} onOpenAdmin={() => setScreen('admin')} />
+			) : screen === 'admin' ? (
+				<AdminScreen cats={cats} onCatsChanged={refresh} onBack={() => setScreen('camp')} />
 			) : screen === 'patrols' ? (
 				<PatrolsScreen cats={cats} onRewards={refresh} />
 			) : (
