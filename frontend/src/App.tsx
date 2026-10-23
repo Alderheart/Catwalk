@@ -1,3 +1,6 @@
+// App shell: a phone-sized column that respects safe areas, with a header and
+// the Pixi game stage filling the rest.
+
 import { useEffect, useState } from 'react'
 import { api } from './api/client.ts'
 import { PixiStage } from './game/PixiStage.tsx'

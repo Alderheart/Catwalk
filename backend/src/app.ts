@@ -1,3 +1,6 @@
+// Builds the Express app and mounts every router under /api. Kept separate from
+// index.ts so the app can be imported by tests without opening a port.
+
 import express from 'express'
 import { catsRouter } from './cats/routes.ts'
 import { prisma } from './db.ts'
