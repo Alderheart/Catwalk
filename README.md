@@ -27,6 +27,10 @@ npm run dev
 
 The frontend dev server proxies `/api/*` to the backend, and listens on your LAN so you can open it on a phone using the "Network" URL Vite prints.
 
+## Deploying
+
+See [docs/deploy.md](docs/deploy.md) for running it on a VPS behind Caddy with HTTPS.
+
 ## Database
 
 The game talks to the backend over HTTP, and only the backend touches the database. That keeps things like gacha pulls and currency on the server where players can't edit them.
