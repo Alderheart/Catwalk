@@ -1,11 +1,12 @@
 // HTTP endpoints for cats under /api/cats. Validates input with the trait lists
 // from traits.ts and personality.ts, and returns cats through toDto() so
-// lifeStage and personality are always included.
+// lifeStage, level and personality are always included.
 
 import { Router } from 'express'
 import { z } from 'zod'
 import { prisma } from '../db.ts'
 import type { Cat, Personality } from '../generated/prisma/client.ts'
+import { progressFor } from '../progression/level.ts'
 import { generateCat } from './generate.ts'
 import { LIFE_STAGES, lifeStageFor } from './lifeStage.ts'
 import { generatePersonality, PERSONALITY_TRAITS } from './personality.ts'
@@ -13,14 +14,15 @@ import { BREEDS, GENDERS } from './traits.ts'
 
 export const catsRouter = Router()
 
-// Every cat sent to the client carries its derived life stage and its
-// personality as a nested object. Personality is null only for cats made
+// Every cat sent to the client carries its derived life stage and level, and
+// its personality as a nested object. Personality is null only for cats made
 // before personalities existed.
 function toDto(cat: Cat & { personality: Personality | null }) {
 	const { personality, ...rest } = cat
 	return {
 		...rest,
 		lifeStage: lifeStageFor(cat.ageMoons),
+		...progressFor(cat.xp),
 		personality: personality && { mainTrait: personality.mainTrait, sideTrait: personality.sideTrait },
 	}
 }

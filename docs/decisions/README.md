@@ -12,3 +12,4 @@ One short file per decision that shapes the codebase and would be costly to reve
 - [0003 React for UI, PixiJS for the game world](0003-react-ui-pixi-world.md)
 - [0004 Separate frontend and backend packages](0004-separate-packages.md)
 - [0005 Deploy to a shared VPS with Caddy and systemd](0005-vps-deploy.md)
+- [0006 One implicit player until accounts exist](0006-single-implicit-player.md)

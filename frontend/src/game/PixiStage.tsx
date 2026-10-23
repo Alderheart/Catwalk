@@ -1,10 +1,10 @@
 // Mounts the Pixi canvas that fills its parent and runs the camp scene in it.
 // Cats come in as props; the scene reports the focused cat back through onFocus.
 
-import { Application } from 'pixi.js'
 import { useEffect, useRef } from 'react'
 import type { Cat } from '../api/cats.ts'
 import { CampScene, type CatFocus } from './CampScene.ts'
+import { usePixiApp } from './usePixiApp.ts'
 
 type Props = {
 	cats: Cat[]
@@ -22,41 +22,15 @@ export function PixiStage({ cats, onFocus }: Props) {
 		onFocusRef.current = onFocus
 	})
 
-	useEffect(() => {
-		const host = hostRef.current
-		if (!host) return
-
-		const app = new Application()
-		let destroyed = false
-		let ready = false
-
-		app
-			.init({
-				resizeTo: host,
-				backgroundAlpha: 0,
-				antialias: true,
-				autoDensity: true,
-				resolution: Math.min(window.devicePixelRatio, 2),
-			})
-			.then(() => {
-				ready = true
-				if (destroyed) {
-					app.destroy(true)
-					return
-				}
-				host.appendChild(app.canvas)
-				const scene = new CampScene(app, (focus) => onFocusRef.current(focus))
-				scene.setCats(catsRef.current)
-				sceneRef.current = scene
-			})
-
+	usePixiApp(hostRef, (app) => {
+		const scene = new CampScene(app, (focus) => onFocusRef.current(focus))
+		scene.setCats(catsRef.current)
+		sceneRef.current = scene
 		return () => {
-			destroyed = true
-			sceneRef.current?.destroy()
+			scene.destroy()
 			sceneRef.current = null
-			if (ready) app.destroy(true)
 		}
-	}, [])
+	})
 
 	useEffect(() => {
 		sceneRef.current?.setCats(cats)

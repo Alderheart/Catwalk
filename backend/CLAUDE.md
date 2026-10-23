@@ -12,7 +12,9 @@ Node + Express 5 + TypeScript, Prisma 7 on SQLite (via the better-sqlite3 adapte
 - `src/index.ts`: loads env and starts the server on `HOST`/`PORT`. Nothing else. Production binds `127.0.0.1` behind Caddy (see `docs/deploy.md`)
 - `src/app.ts`: builds the Express app and mounts routers under `/api`
 - `src/db.ts`: the only file that knows which database driver we use
-- `src/<domain>/`: one folder per game domain (e.g. `cats/`) holding its routes, rules and generators
+- `src/<domain>/`: one folder per game domain (`cats/`, `patrols/`, `inventory/`, `camp/`) holding its routes, rules and generators
+- `src/players/current.ts`: who the request is for. One implicit player until accounts exist (see `docs/decisions/0006-single-implicit-player.md`)
+- `src/progression/level.ts`: the xp-to-level curve shared by cats and the camp
 - `src/generated/prisma/`: generated Prisma client. Never edit; regenerate with `npm run db:generate`
 
 ## Patterns
@@ -26,4 +28,4 @@ Node + Express 5 + TypeScript, Prisma 7 on SQLite (via the better-sqlite3 adapte
 ## Schema rules
 - Keep types portable (String, Int, Boolean, DateTime, Float), use string `cuid()` ids, and avoid raw SQL, so moving to Postgres is a provider swap (see the root `README.md`)
 - Enum-like values are stored as strings and validated in code, because SQLite has no enums
-- Don't store values that can be derived (for example life stage from age)
+- Don't store values that can be derived (for example life stage from age, or level from xp)

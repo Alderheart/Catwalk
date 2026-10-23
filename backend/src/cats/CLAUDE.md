@@ -7,7 +7,8 @@ Everything about individual cats: their traits, personalities, ages, life stages
 - Personality is its own group of fields in its own `Personality` model (one per cat), not columns on `Cat`, so it can grow. `personality.ts` holds the allowed traits and `generatePersonality()`. The side trait always differs from the main trait
 - Life stage is never stored. It is always derived from `ageMoons` with `lifeStageFor()` in `lifeStage.ts`, so the two can't disagree
 - Age is measured in moons (about one month each). Stage boundaries live only in `lifeStage.ts`; don't hard-code them elsewhere
-- Every cat sent to the client goes through `toDto()` in `routes.ts`, which adds `lifeStage` and nests `personality` (null for cats made before personalities existed). Every cat query must `include: { personality: true }`
+- Level is never stored either. It is derived from `xp` with `src/progression/level.ts`. Patrols add xp
+- Every cat sent to the client goes through `toDto()` in `routes.ts`, which adds `lifeStage` and the level fields and nests `personality` (null for cats made before personalities existed). Every cat query must `include: { personality: true }`
 - `generate.ts` has no database access, and takes an injectable `rng` for deterministic tests
 
 ## When changing things here

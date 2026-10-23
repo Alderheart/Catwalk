@@ -16,27 +16,62 @@ datasource db {
   provider = "sqlite"
 }
 
+// Until accounts exist there is one implicit player (see
+// docs/decisions/0006-single-implicit-player.md and src/players/current.ts)
 model Player {
-  id        String   @id @default(cuid())
-  username  String   @unique
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  id        String          @id @default(cuid())
+  username  String          @unique
+  camp      Camp?
+  inventory InventoryItem[]
+  patrols   Patrol[]
+  createdAt DateTime        @default(now()) @map("created_at")
+  updatedAt DateTime        @updatedAt @map("updated_at")
 
   @@map("players")
 }
 
-// Life stage is not stored: it is derived from ageMoons (see src/cats/lifeStage.ts)
-// so the two can never disagree. Gender and breed are plain strings validated in
+// The player's camp as a whole. Level is not stored: it is derived from xp
+// (see src/progression/level.ts)
+model Camp {
+  id        String   @id @default(cuid())
+  playerId  String   @unique @map("player_id")
+  player    Player   @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  xp        Int      @default(0)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("camps")
+}
+
+// One row per item kind the player holds. itemKey is a string validated in code
+// (src/inventory/items.ts)
+model InventoryItem {
+  id        String   @id @default(cuid())
+  playerId  String   @map("player_id")
+  player    Player   @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  itemKey   String   @map("item_key")
+  quantity  Int
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@unique([playerId, itemKey])
+  @@map("inventory_items")
+}
+
+// Life stage and level are not stored: they are derived from ageMoons and xp
+// (see src/cats/lifeStage.ts and src/progression/level.ts) so they can never disagree. Gender and breed are plain strings validated in
 // code (src/cats/traits.ts) to keep the schema portable.
 model Cat {
-  id          String       @id @default(cuid())
+  id          String         @id @default(cuid())
   name        String
   breed       String
   gender      String
-  ageMoons    Int          @map("age_moons")
+  ageMoons    Int            @map("age_moons")
+  xp          Int            @default(0)
   personality Personality?
-  createdAt   DateTime     @default(now()) @map("created_at")
-  updatedAt   DateTime     @updatedAt @map("updated_at")
+  patrols     PatrolMember[]
+  createdAt   DateTime       @default(now()) @map("created_at")
+  updatedAt   DateTime       @updatedAt @map("updated_at")
 
   @@map("cats")
 }
@@ -55,4 +90,40 @@ model Personality {
   updatedAt DateTime @updatedAt @map("updated_at")
 
   @@map("personalities")
+}
+
+// A patrol out of camp. type and status are strings validated in code
+// (src/patrols/types.ts). Rewards are rolled when the patrol is collected, so
+// nothing about the outcome is stored while it is out.
+model Patrol {
+  id          String         @id @default(cuid())
+  playerId    String         @map("player_id")
+  player      Player         @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  type        String
+  status      String
+  members     PatrolMember[]
+  startedAt   DateTime       @map("started_at")
+  endsAt      DateTime       @map("ends_at")
+  // Minigames played to speed the patrol up, capped in src/patrols/timing.ts
+  boostCount  Int            @default(0) @map("boost_count")
+  lastBoostAt DateTime?      @map("last_boost_at")
+  completedAt DateTime?      @map("completed_at")
+  createdAt   DateTime       @default(now()) @map("created_at")
+  updatedAt   DateTime       @updatedAt @map("updated_at")
+
+  @@map("patrols")
+}
+
+// A cat's place on a patrol: one leader and up to three members
+model PatrolMember {
+  id       String @id @default(cuid())
+  patrolId String @map("patrol_id")
+  patrol   Patrol @relation(fields: [patrolId], references: [id], onDelete: Cascade)
+  catId    String @map("cat_id")
+  cat      Cat    @relation(fields: [catId], references: [id], onDelete: Cascade)
+  role     String
+
+  @@unique([patrolId, catId])
+  @@index([catId])
+  @@map("patrol_members")
 }
