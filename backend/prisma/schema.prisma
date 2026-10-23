@@ -29,13 +29,30 @@ model Player {
 // so the two can never disagree. Gender and breed are plain strings validated in
 // code (src/cats/traits.ts) to keep the schema portable.
 model Cat {
+  id          String       @id @default(cuid())
+  name        String
+  breed       String
+  gender      String
+  ageMoons    Int          @map("age_moons")
+  personality Personality?
+  createdAt   DateTime     @default(now()) @map("created_at")
+  updatedAt   DateTime     @updatedAt @map("updated_at")
+
+  @@map("cats")
+}
+
+// A cat's personality, kept as its own model so new personality fields don't
+// crowd the Cat model. One per cat. Optional on Cat only because cats made
+// before personalities existed have none. Traits are strings validated in code
+// (src/cats/personality.ts).
+model Personality {
   id        String   @id @default(cuid())
-  name      String
-  breed     String
-  gender    String
-  ageMoons  Int      @map("age_moons")
+  catId     String   @unique @map("cat_id")
+  cat       Cat      @relation(fields: [catId], references: [id], onDelete: Cascade)
+  mainTrait String   @map("main_trait")
+  sideTrait String   @map("side_trait")
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  @@map("cats")
+  @@map("personalities")
 }
