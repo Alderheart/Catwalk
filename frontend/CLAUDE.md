@@ -8,10 +8,11 @@ Vite + React 19 + TypeScript. Tailwind 4 for UI, PixiJS 8 for game scenes. Linte
 - `npm run lint`: run oxlint
 
 ## Layout
-- `src/App.tsx`: the app shell (header, safe areas, stage)
+- `src/App.tsx`: the app shell (safe areas, bottom tab bar, and which screen is showing)
 - `src/api/`: typed wrappers around backend endpoints. `client.ts` is the shared fetch helper
 - `src/game/`: Pixi rendering. `PixiStage.tsx` owns the canvas lifecycle, `CampScene.ts` draws the camp, `campLayout.ts` holds the layout math
 - `src/game/CatTooltip.tsx`: React overlay for cat info, positioned from the rect the scene reports
+- `src/patrols/`: React screens for patrols. Placeholder until patrols are designed (see `backend/src/patrols/CLAUDE.md`)
 
 ## Patterns
 - Mobile first: design for a phone held in portrait. Use `h-dvh`, respect `env(safe-area-inset-*)`, and keep touch targets at least 44px
