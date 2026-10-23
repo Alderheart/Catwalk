@@ -7,6 +7,7 @@
 
 # Project
 - Monorepo containing frontend at frontend folder, and backend at backend folder
+- Folders split game domains from plumbing, with the same domain names on both sides (see `docs/decisions/0008-folder-layout.md`)
 - Frontend and backend are separated and use separate node installations (nothing shared)
 - A mobile-first, browser-based cat colony game inspired by ClanGen
 - The backend is the source of truth for game state (see `docs/decisions/0001-server-authoritative-state.md`)
@@ -16,7 +17,7 @@ Read the nearest `CLAUDE.md` before changing code in a folder. More specific fil
 
 - `CLAUDE.md` (this file): repo-wide rules and layout
 - `frontend/CLAUDE.md`, `backend/CLAUDE.md`: stack, scripts and patterns for each side
-- `backend/src/cats/CLAUDE.md`: rules for the cats domain
+- `backend/src/game/<domain>/CLAUDE.md`, `frontend/src/minigames/CLAUDE.md`: rules for one domain or system
 - A short header comment at the top of non-obvious source files: what the file is for and what it must not do
 - Comments on exported functions: explain why, not what
 - `docs/decisions/`: one short file per big decision, so it isn't reopened without reason

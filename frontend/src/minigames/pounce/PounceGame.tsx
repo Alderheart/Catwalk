@@ -3,7 +3,7 @@
 // backend decides what a win is worth.
 
 import { useEffect, useRef, useState } from 'react'
-import { usePixiApp } from '../../game/usePixiApp.ts'
+import { usePixiApp } from '../../pixi/usePixiApp.ts'
 import type { MinigameProps } from '../types.ts'
 import { PounceScene } from './PounceScene.ts'
 

@@ -1,11 +1,11 @@
 import { api } from './client.ts'
 
-// Mirrors the backend cat response (backend/src/cats). Frontend and backend
+// Mirrors the backend cat response (backend/src/game/cats). Frontend and backend
 // share no code, so keep these in sync by hand.
 export type LifeStage = 'kit' | 'adolescent' | 'adult' | 'elder'
 export type Gender = 'tom' | 'she-cat' | 'nonbinary'
 
-// Trait values come from backend/src/cats/personality.ts. Kept as string here
+// Trait values come from backend/src/game/cats/personality.ts. Kept as string here
 // because the UI only displays them
 export type Personality = {
 	mainTrait: string
@@ -20,7 +20,7 @@ export type Cat = {
 	ageMoons: number
 	lifeStage: LifeStage
 	xp: number
-	// Derived from xp on the server (backend/src/progression/level.ts)
+	// Derived from xp on the server (backend/src/game/progression/level.ts)
 	level: number
 	levelStartXp: number
 	nextLevelXp: number

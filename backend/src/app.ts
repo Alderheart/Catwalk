@@ -2,11 +2,11 @@
 // index.ts so the app can be imported by tests without opening a port.
 
 import express from 'express'
-import { campRouter } from './camp/routes.ts'
-import { catsRouter } from './cats/routes.ts'
-import { prisma } from './db.ts'
-import { inventoryRouter } from './inventory/routes.ts'
-import { patrolsRouter } from './patrols/routes.ts'
+import { campRouter } from './game/camp/routes.ts'
+import { catsRouter } from './game/cats/routes.ts'
+import { prisma } from './platform/db.ts'
+import { inventoryRouter } from './game/inventory/routes.ts'
+import { patrolsRouter } from './game/patrols/routes.ts'
 
 export const app = express()
 
