@@ -12,7 +12,20 @@ export type Personality = {
 	sideTrait: string
 }
 
-export type Cat = {
+// Gameplay stats, stored as integers on the server (backend/src/game/cats/stats.ts).
+// health and energy never exceed their maximums
+export type CatStats = {
+	health: number
+	maxHealth: number
+	energy: number
+	maxEnergy: number
+	attack: number
+	defense: number
+	speed: number
+}
+export type StatKey = keyof CatStats
+
+export type Cat = CatStats & {
 	id: string
 	name: string
 	breed: string
@@ -47,11 +60,16 @@ export type CatTraitOptions = {
 	lifeStages: { stage: LifeStage; minAgeMoons: number }[]
 	maxAgeMoons: number
 	maxXp: number
+	// Every stat in display order, the cap for any one stat, and what an
+	// unedited cat starts with
+	statKeys: StatKey[]
+	maxStat: number
+	defaultStats: CatStats
 }
 
-// What the admin panel can set on a cat. On create, personality is rolled by
-// the server when left out and xp defaults to 0
-export type CatFields = {
+// What the admin panel can set on a cat. On create, personality and stats are
+// rolled by the server when left out and xp defaults to 0
+export type CatFields = CatStats & {
 	name: string
 	breed: string
 	gender: Gender

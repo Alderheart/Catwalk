@@ -13,9 +13,9 @@ type Props = {
 
 const WIDTH = 176
 const GAP = 8
-// Roughly the tooltip's height with its personality section, so it only sits
-// above the square when it fits
-const HEIGHT = 190
+// Roughly the tooltip's height with its stats and personality sections, so it
+// only sits above the square when it fits
+const HEIGHT = 260
 
 export function CatTooltip({ cat, rect, stageWidth }: Props) {
 	const centre = rect.x + rect.width / 2
@@ -42,6 +42,15 @@ export function CatTooltip({ cat, rect, stageWidth }: Props) {
 			<p className="text-stone-400">
 				{cat.ageMoons} {cat.ageMoons === 1 ? 'moon' : 'moons'} old
 			</p>
+			<div className="mt-2 border-t border-stone-600 pt-2">
+				<p className="text-xs font-semibold uppercase tracking-wide text-stone-400">Stats</p>
+				<p>
+					HP {cat.health}/{cat.maxHealth} · EN {cat.energy}/{cat.maxEnergy}
+				</p>
+				<p className="text-stone-300">
+					ATK {cat.attack} · DEF {cat.defense} · SPD {cat.speed}
+				</p>
+			</div>
 			{cat.personality && (
 				<div className="mt-2 border-t border-stone-600 pt-2">
 					<p className="text-xs font-semibold uppercase tracking-wide text-stone-400">Personality</p>

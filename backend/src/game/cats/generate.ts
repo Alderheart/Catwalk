@@ -3,6 +3,7 @@
 
 import { AGE_RANGES, LIFE_STAGES, type LifeStage } from './lifeStage.ts'
 import { generatePersonality, type Personality } from './personality.ts'
+import { generateStats, type CatStats } from './stats.ts'
 import { BREEDS, GENDERS, type Breed, type Gender } from './traits.ts'
 
 export type CatTraits = {
@@ -11,7 +12,7 @@ export type CatTraits = {
 	gender: Gender
 	ageMoons: number
 	personality: Personality
-}
+} & CatStats
 
 const NAMES = [
 	'Ash', 'Bramble', 'Cinder', 'Dapple', 'Ember', 'Fern', 'Frost', 'Hazel',
@@ -40,5 +41,6 @@ export function generateCat(options: { lifeStage?: LifeStage; rng?: Rng } = {}):
 		gender: pick(GENDERS, rng),
 		ageMoons: randomInt(minAge, maxAge, rng),
 		personality: generatePersonality(rng),
+		...generateStats(rng),
 	}
 }
