@@ -5,40 +5,9 @@
 
 import type { Rng } from './generate.ts'
 
-// Starter list in the spirit of ClanGen's personality traits
-export const PERSONALITY_TRAITS = [
-	'adventurous',
-	'ambitious',
-	'bloodthirsty',
-	'bold',
-	'calm',
-	'careful',
-	'charismatic',
-	'childish',
-	'cold',
-	'compassionate',
-	'confident',
-	'daring',
-	'faithful',
-	'fierce',
-	'insecure',
-	'lonesome',
-	'loving',
-	'loyal',
-	'nervous',
-	'patient',
-	'playful',
-	'responsible',
-	'righteous',
-	'shameless',
-	'sneaky',
-	'strange',
-	'strict',
-	'thoughtful',
-	'troublesome',
-	'vengeful',
-	'wise',
-] as const
+// Kept deliberately short so each trait can have a real effect on gameplay.
+// Add a trait only alongside the rules that make it matter
+export const PERSONALITY_TRAITS = ['bold', 'timid', 'loyal'] as const
 export type PersonalityTrait = (typeof PERSONALITY_TRAITS)[number]
 
 export type Personality = {
